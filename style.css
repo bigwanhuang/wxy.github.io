@@ -165,9 +165,9 @@ header {
       #post .content .post-meta a:hover {
         color: #007fff; }
   #post > .content {
-    width: 66%; }
+    width: 75%; }
   #post aside {
-    flex-basis: 34%; }
+    flex-basis: 25%; }
     #post aside .toc-container {
       margin-left: 15px;
       box-sizing: border-box;
@@ -622,7 +622,7 @@ header {
   box-shadow: 0 2px 5px -2px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   box-sizing: border-box;
-  flex-basis: 66%;
+  flex-basis: 75%;
   align-self: flex-start; }
   #index .posts-list section {
     padding: 20px 25px;
@@ -659,7 +659,7 @@ header {
 #index aside {
   position: sticky;
   top: 15px;
-  flex-basis: 34%; }
+  flex-basis: 25%; }
   #index aside > div {
     margin-left: 15px;
     box-sizing: border-box;
@@ -720,7 +720,7 @@ header {
   .paging .paging-container {
     display: flex;
     justify-content: space-between;
-    width: 66%; }
+    width: 100%; }
     .paging .paging-container > div {
       display: inline-block;
       border-radius: 2px;
