@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>springmvc学习笔记(5)-入门程序小结 | Hexo</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>Hexo</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(5)-入门程序小结</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月08日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Spring/">Spring</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="入门程序配置小结"><a href="#入门程序配置小结" class="headerlink" title="入门程序配置小结"></a>入门程序配置小结</h2><p>前端控制器配置：</p>
+<ul>
+<li>第一种：<code>*.action</code>，访问以<code>.action</code>结尾 由<code>DispatcherServlet</code>进行解析</li>
+<li>第二种：<code>/</code>，所以访问的地址都由<code>DispatcherServlet</code>进行解析，对于静态文件的解析需要配置不让<code>DispatcherServlet</code>进行解析,使用此种方式可以实现RESTful风格的url</li>
+</ul>
+<p>处理器映射器：</p>
+<ul>
+<li>非注解处理器映射器（了解）</li>
+<li>注解的处理器映射器（掌握）</li>
+</ul>
+<p>对标记<code>@Controller</code>类中标识有<code>@RequestMapping</code>的方法进行映射。在<code>@RequestMapping</code>里边定义映射的url。使用注解的映射器不用在xml中配置url和Handler的映射关系。</p>
+<p>处理器适配器：</p>
+<p>非注解处理器适配器（了解）<br>注解的处理器适配器（掌握）<br>注解处理器适配器和注解的处理器映射器是<strong>配对使用</strong>。理解为不能使用非注解映射器进行映射。</p>
+<p><a href="mvc:annotation-driven" target="_blank" rel="noopener">mvc:annotation-driven</a>&lt;/mvc:annotation-driven&gt; </p>
+<p>可以代替下边的配置：</p>
+<pre><code>&lt;!--注解映射器 --&gt;  
+&lt;bean class=&quot;org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping&quot;/&gt;  
+&lt;!--注解适配器 --&gt;  
+&lt;bean class=&quot;org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter&quot;/&gt;  
+</code></pre><h2 id="非注解的完整的配置文件"><a href="#非注解的完整的配置文件" class="headerlink" title="非注解的完整的配置文件"></a>非注解的完整的配置文件</h2><p><code>src/main/resources/springmvc.xml</code></p>
+<pre><code>&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+   xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+   xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+   xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+   xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd&quot;&gt;
+
+&lt;!-- 配置Handler --&gt;
+&lt;bean name=&quot;/queryItems.action&quot; class=&quot;com.iot.ssm.controller.ItemsController&quot;/&gt;
+
+&lt;!-- 处理器映射器
+将bean的name作为url进行查找，需要在配置Handler时指定beanname(就是url)
+ --&gt;
+&lt;bean class=&quot;org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping&quot;/&gt;
+
+&lt;!-- 处理器适配器
+ 所有处理器适配器都实现了HandlerAdapter接口
+ --&gt;
+&lt;bean class=&quot;org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter&quot;/&gt;
+
+&lt;!-- 视图解析器
+解析jsp,默认使用jstl,classpath下要有jstl的包
+--&gt;
+&lt;bean class=&quot;org.springframework.web.servlet.view.InternalResourceViewResolver&quot;/&gt;
+
+&lt;/beans&gt;
+</code></pre><h2 id="注解的完整配置文件"><a href="#注解的完整配置文件" class="headerlink" title="注解的完整配置文件"></a>注解的完整配置文件</h2><pre><code>&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+    http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd&quot;&gt;
+
+   &lt;!-- 对于注解的Handler 可以单个配置
+    实际开发中加你使用组件扫描
+    --&gt;
+    &lt;!--  &lt;bean  class=&quot;com.iot.ssm.controller.ItemsController3&quot;/&gt; --&gt;
+    &lt;!-- 可以扫描controller、service、...
+    这里让扫描controller，指定controller的包
+     --&gt;
+    &lt;context:component-scan base-package=&quot;com.iot.ssm.controller&quot;&gt;&lt;/context:component-scan&gt;
+
+
+
+
+    &lt;!-- 注解的映射器 --&gt;
+    &lt;bean class=&quot;org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping&quot;/&gt;
+
+    &lt;!-- 注解的适配器 --&gt;
+    &lt;bean class=&quot;org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter&quot;/&gt;
+
+    &lt;!-- 使用mvc:annotation-driven代替上面两个注解映射器和注解适配的配置
+     mvc:annotation-driven默认加载很多的参数绑定方法，
+     比如json转换解析器默认加载了，如果使用mvc:annotation-driven则不用配置上面的RequestMappingHandlerMapping和RequestMappingHandlerAdapter
+     实际开发时使用mvc:annotation-driven
+     --&gt;
+    &lt;mvc:annotation-driven&gt;&lt;/mvc:annotation-driven&gt;
+
+    &lt;!-- 视图解析器
+    解析jsp,默认使用jstl,classpath下要有jstl的包
+    --&gt;
+    &lt;bean class=&quot;org.springframework.web.servlet.view.InternalResourceViewResolver&quot;&gt;
+        &lt;!-- 配置jsp路径的前缀 --&gt;
+        &lt;property name=&quot;prefix&quot; value=&quot;/WEB-INF/jsp/&quot;/&gt;
+        &lt;!-- 配置jsp路径的后缀 --&gt;
+        &lt;property name=&quot;suffix&quot; value=&quot;.jsp&quot;/&gt;
+    &lt;/bean&gt;
+
+&lt;/beans&gt;
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#入门程序配置小结"><span class="toc-number">1.</span> <span class="toc-text">入门程序配置小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#非注解的完整的配置文件"><span class="toc-number">2.</span> <span class="toc-text">非注解的完整的配置文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#注解的完整配置文件"><span class="toc-number">3.</span> <span class="toc-text">注解的完整配置文件</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
