@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>springmvc学习笔记(7)-springmvc整合mybatis之mapper | Hexo</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>Hexo</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(7)-springmvc整合mybatis之mapper</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月09日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="整合dao"><a href="#整合dao" class="headerlink" title="整合dao"></a>整合dao</h2><p>首先在resource文件夹下添加两个文件：数据库配置文件和日志配置文件</p>
+<ul>
+<li>数据库配置文件db.properties</li>
+</ul>
+<pre><code>jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://120.25.162.238:3306/mybatis001?characterEncoding=utf-8
+jdbc.username=root
+jdbc.password=123
+</code></pre><ul>
+<li><p>日志配置文件log4j.properties</p>
+<pre><code># Global logging configuration
+log4j.rootLogger=DEBUG, stdout
+# Console output...
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
+</code></pre></li>
+</ul>
+<h3 id="sqlMapConfig-xml"><a href="#sqlMapConfig-xml" class="headerlink" title="sqlMapConfig.xml"></a>sqlMapConfig.xml</h3><p>mybatis自己的配置文件</p>
+<p>在resources目录下新建mybatis文件夹，并新建sqlMapConfig.xml文件</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;
+
+    &lt;!-- 全局setting配置，根据需要添加 --&gt;
+
+    &lt;!-- 配置别名 --&gt;
+    &lt;typeAliases&gt;
+        &lt;!-- 批量扫描别名 --&gt;
+        &lt;package name=&quot;com.iot.learnssm.firstssm.po&quot;/&gt;
+    &lt;/typeAliases&gt;
+
+    &lt;!-- 配置mapper
+    由于使用spring和mybatis的整合包进行mapper扫描，这里不需要配置了。
+    必须遵循：mapper.xml和mapper.java文件同名且在一个目录
+     --&gt;
+
+    &lt;!-- &lt;mappers&gt;
+
+    &lt;/mappers&gt; --&gt;
+&lt;/configuration&gt;
+</code></pre><h3 id="applicationContext-dao-xml"><a href="#applicationContext-dao-xml" class="headerlink" title="applicationContext-dao.xml"></a>applicationContext-dao.xml</h3><p>在resources目录下新建spring文件夹，并新建applicationContext-dao.xml文件</p>
+<p>配置：</p>
+<ul>
+<li>数据源</li>
+<li>SqlSessionFactory</li>
+<li>mapper扫描器</li>
+</ul>
+<pre><code>&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+   xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+   xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+   xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+   xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd&quot;&gt;
+
+&lt;!-- 加载db.properties文件中的内容，db.properties文件中key命名要有一定的特殊规则 --&gt;
+&lt;context:property-placeholder location=&quot;classpath:db.properties&quot; /&gt;
+&lt;!-- 配置数据源 ，dbcp --&gt;
+
+&lt;bean id=&quot;dataSource&quot; class=&quot;org.apache.commons.dbcp.BasicDataSource&quot; destroy-method=&quot;close&quot;&gt;
+    &lt;property name=&quot;driverClassName&quot; value=&quot;${jdbc.driver}&quot;/&gt;
+    &lt;property name=&quot;url&quot; value=&quot;${jdbc.url}&quot;/&gt;
+    &lt;property name=&quot;username&quot; value=&quot;${jdbc.username}&quot; /&gt;
+    &lt;property name=&quot;password&quot; value=&quot;${jdbc.password}&quot; /&gt;
+    &lt;property name=&quot;maxActive&quot; value=&quot;30&quot; /&gt;
+    &lt;property name=&quot;maxIdle&quot; value=&quot;5&quot; /&gt;
+&lt;/bean&gt;
+
+&lt;!-- 从整合包里找，org.mybatis:mybatis-spring:1.2.4 --&gt;
+&lt;!-- sqlSessionFactory --&gt;
+&lt;bean id=&quot;sqlSessionFactory&quot; class=&quot;org.mybatis.spring.SqlSessionFactoryBean&quot;&gt;
+    &lt;!-- 数据库连接池 --&gt;
+    &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot; /&gt;
+    &lt;!-- 加载mybatis的全局配置文件 --&gt;
+    &lt;property name=&quot;configLocation&quot; value=&quot;classpath:mybatis/sqlMapConfig.xml&quot; /&gt;
+&lt;/bean&gt;
+&lt;!-- mapper扫描器 --&gt;
+&lt;bean class=&quot;org.mybatis.spring.mapper.MapperScannerConfigurer&quot;&gt;
+    &lt;!-- 扫描包路径，如果需要扫描多个包，中间使用半角逗号隔开 --&gt;
+    &lt;property name=&quot;basePackage&quot; value=&quot;com.iot.learnssm.firstssm.mapper&quot;/&gt;
+    &lt;property name=&quot;sqlSessionFactoryBeanName&quot; value=&quot;sqlSessionFactory&quot; /&gt;
+   &lt;!-- &lt;property name=&quot;sqlSessionFactory&quot; ref=&quot;sqlSessionFactory&quot; /&gt;
+   会导致数据源配置不管用，数据库连接不上。
+   且spring 4弃用
+   --&gt;
+&lt;/bean&gt;
+
+&lt;/beans&gt;
+</code></pre><h3 id="逆向工程生成po类及mapper-单表增删改查"><a href="#逆向工程生成po类及mapper-单表增删改查" class="headerlink" title="逆向工程生成po类及mapper(单表增删改查)"></a>逆向工程生成po类及mapper(单表增删改查)</h3><p>方法参见<a href="http://blog.csdn.net/h3243212/article/details/50778937" target="_blank" rel="noopener">《mybatis学习笔记(18)-mybatis逆向工程》</a></p>
+<h3 id="手动定义商品查询mapper"><a href="#手动定义商品查询mapper" class="headerlink" title="手动定义商品查询mapper"></a>手动定义商品查询mapper</h3><p>针对综合查询mapper，一般情况会有关联查询，建议自定义mapper</p>
+<ul>
+<li>ItemsMapperCustom.xml</li>
+</ul>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.iot.learnssm.firstssm.mapper.ItemsMapperCustom&quot; &gt;
+
+   &lt;!-- 定义商品查询的sql片段，就是商品查询条件 --&gt;
+   &lt;sql id=&quot;query_items_where&quot;&gt;
+       &lt;!-- 使用动态sql，通过if判断，满足条件进行sql拼接 --&gt;
+       &lt;!-- 商品查询条件通过ItemsQueryVo包装对象 中itemsCustom属性传递 --&gt;
+           &lt;if test=&quot;itemsCustom!=null&quot;&gt;
+               &lt;if test=&quot;itemsCustom.name!=null and itemsCustom.name!=&apos;&apos;&quot;&gt;
+                   items.name LIKE &apos;%${itemsCustom.name}%&apos;
+               &lt;/if&gt;
+           &lt;/if&gt;
+
+   &lt;/sql&gt;
+
+      &lt;!-- 商品列表查询 --&gt;
+      &lt;!-- parameterType传入包装对象(包装了查询条件)
+          resultType建议使用扩展对象
+       --&gt;
+      &lt;select id=&quot;findItemsList&quot; parameterType=&quot;com.iot.learnssm.firstssm.po.ItemsQueryVo&quot;
+           resultType=&quot;com.iot.learnssm.firstssm.po.ItemsCustom&quot;&gt;
+          SELECT items.* FROM items  
+          &lt;where&gt;
+              &lt;include refid=&quot;query_items_where&quot;&gt;&lt;/include&gt;
+          &lt;/where&gt;
+      &lt;/select&gt;
+
+&lt;/mapper&gt;
+</code></pre><ul>
+<li>ItemsMapperCustom.java</li>
+</ul>
+<pre><code>public interface ItemsMapperCustom {
+    //商品查询列表
+    List&lt;ItemsCustom&gt; findItemsList(ItemsQueryVo itemsQueryVo)throws Exception;
+}
+</code></pre><ul>
+<li>po类<code>ItemsCustom</code></li>
+</ul>
+<pre><code>/**
+ * 
+ * 商品信息的扩展类
+ */
+public class ItemsCustom extends Items{
+    //添加商品信息的扩展属性
+}
+</code></pre><ul>
+<li>输入pojo的包装类</li>
+</ul>
+<pre><code>package com.iot.learnssm.firstssm.po;
+
+
+public class ItemsQueryVo {
+
+    //商品信息
+    private Items items;
+
+    //为了系统 可扩展性，对原始生成的po进行扩展
+    private ItemsCustom itemsCustom;
+
+    public Items getItems() {
+        return items;
+    }
+
+    public void setItems(Items items) {
+        this.items = items;
+    }
+
+    public ItemsCustom getItemsCustom() {
+        return itemsCustom;
+    }
+
+    public void setItemsCustom(ItemsCustom itemsCustom) {
+        this.itemsCustom = itemsCustom;
+    }
+}
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#整合dao"><span class="toc-number">1.</span> <span class="toc-text">整合dao</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#sqlMapConfig-xml"><span class="toc-number">1.1.</span> <span class="toc-text">sqlMapConfig.xml</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#applicationContext-dao-xml"><span class="toc-number">1.2.</span> <span class="toc-text">applicationContext-dao.xml</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#逆向工程生成po类及mapper-单表增删改查"><span class="toc-number">1.3.</span> <span class="toc-text">逆向工程生成po类及mapper(单表增删改查)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#手动定义商品查询mapper"><span class="toc-number">1.4.</span> <span class="toc-text">手动定义商品查询mapper</span></a></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>springmvc学习笔记(2)-非注解的处理器映射器和适配器 | Hexo</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>Hexo</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(2)-非注解的处理器映射器和适配器</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月08日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="非注解的处理器映射器"><a href="#非注解的处理器映射器" class="headerlink" title="非注解的处理器映射器"></a>非注解的处理器映射器</h2><pre><code> &lt;!-- 配置Handler --&gt;
+&lt;bean id=&quot;itemsController&quot; name=&quot;/queryItems.action&quot; class=&quot;com.iot.ssm.controller.ItemsController&quot;/&gt;
+
+&lt;!-- 处理器映射器
+将bean的name作为url进行查找，需要在配置Handler时指定beanname(就是url)
+ --&gt;
+&lt;bean class=&quot;org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping&quot;/&gt;
+
+&lt;!-- 简单url映射--&gt;
+&lt;bean class=&quot;org.springframework.web.servlet.handler.SimpleUrlHandlerMapping&quot;&gt;
+    &lt;property name=&quot;mappings&quot;&gt;
+        &lt;props&gt;
+            &lt;!-- 对 itemsController进行url映射--&gt;
+            &lt;prop key=&quot;/queryItems1.action&quot;&gt;itemsController&lt;/prop&gt;
+            &lt;prop key=&quot;/queryItems2.action&quot;&gt;itemsController&lt;/prop&gt;
+        &lt;/props&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre><p>多个映射器可并存，前端控制器判断url能让哪些映射器处理就让正确的映射器处理</p>
+<h2 id="非注解的处理器适配器"><a href="#非注解的处理器适配器" class="headerlink" title="非注解的处理器适配器"></a>非注解的处理器适配器</h2><pre><code>&lt;!-- 处理器适配器
+    所有处理器适配器都实现了HandlerAdapter接口
+    --&gt;
+   &lt;bean class=&quot;org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter&quot;/&gt;
+</code></pre><p>要求编写的Handler实现<code>Controller</code>接口</p>
+<p><code>&lt;bean class=&quot;org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter&quot;/&gt;</code></p>
+<p>要求编写的Handler实现<code>HttpRequestHandler</code>接口</p>
+<pre><code>import com.iot.ssm.po.Items;
+import org.springframework.web.HttpRequestHandler;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by brian on 2016/2/19.
+ */
+public class ItemsController2 implements HttpRequestHandler{
+    public void handleRequest(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+        //调用service查找数据库，查询商品列表，这里使用静态数据模拟
+        List&lt;Items&gt; itemsList = new ArrayList&lt;Items&gt;();
+
+        //向list中填充静态数据
+        Items items_1 = new Items();
+        items_1.setName(&quot;联想笔记本&quot;);
+        items_1.setPrice(6000f);
+        items_1.setDetail(&quot;ThinkPad T430 联想笔记本电脑！&quot;);
+
+        Items items_2 = new Items();
+        items_2.setName(&quot;苹果手机&quot;);
+        items_2.setPrice(5000f);
+        items_2.setDetail(&quot;iphone6苹果手机！&quot;);
+
+        itemsList.add(items_1);
+        itemsList.add(items_2);
+
+        //设置模型数据
+        httpServletRequest.setAttribute(&quot;itemsList&quot;,itemsList);
+
+        //设置转发的视图
+        httpServletRequest.getRequestDispatcher(&quot;/WEB-INF/jsp/items/itemsList.jsp&quot;).forward(httpServletRequest,httpServletResponse);
+
+    }
+}
+</code></pre><p><code>HttpRequestHandler</code>适配器的<code>handleRequest</code>方法返回为<code>void</code>,没有返回<code>ModelAndView</code>，可通过response修改响应内容,比如返回json数据：</p>
+<pre><code>response.setCharacterEncoding(&quot;utf-8&quot;);
+response.setContentType(&quot;application/json;charset=utf-8&quot;);
+response.getWriter().write(&quot;json串&quot;);
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#非注解的处理器映射器"><span class="toc-number">1.</span> <span class="toc-text">非注解的处理器映射器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#非注解的处理器适配器"><span class="toc-number">2.</span> <span class="toc-text">非注解的处理器适配器</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

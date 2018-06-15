@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>springmvc学习笔记(10)-springmvc注解开发之商品修改功能 | Hexo</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>Hexo</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(10)-springmvc注解开发之商品修改功能</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月09日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h2><p>操作流程： </p>
+<ul>
+<li>1.进入商品查询列表页面</li>
+<li>2.点击修改，进入商品修改页面，页面中显示了要修改的商品。要修改的商品从数据库查询，根据商品id(主键)查询商品信息</li>
+<li>3.在商品修改页面，修改商品信息，修改后，点击提交</li>
+</ul>
+<h2 id="开发mapper"><a href="#开发mapper" class="headerlink" title="开发mapper"></a>开发mapper</h2><p>mapper：</p>
+<ul>
+<li>根据id查询商品信息</li>
+<li>根据id更新Items表的数据</li>
+</ul>
+<p>不用开发了，使用逆向工程生成的代码。</p>
+<h2 id="开发service"><a href="#开发service" class="headerlink" title="开发service"></a>开发service</h2><p>在<code>com.iot.learnssm.firstssm.service.ItemsService</code>中添加两个接口</p>
+<pre><code>//根据id查询商品信息
+  /**
+   *
+   * &lt;p&gt;Title: findItemsById&lt;/p&gt;
+   * &lt;p&gt;Description: &lt;/p&gt;
+   * @param id 查询商品的id
+   * @return
+   * @throws Exception
+   */
+   ItemsCustom findItemsById(Integer id) throws Exception;
+
+  //修改商品信息
+  /**
+   *
+   * &lt;p&gt;Title: updateItems&lt;/p&gt;
+   * &lt;p&gt;Description: &lt;/p&gt;
+   * @param id 修改商品的id
+   * @param itemsCustom 修改的商品信息
+   * @throws Exception
+   */
+   void updateItems(Integer id,ItemsCustom itemsCustom) throws Exception;
+</code></pre><p>在<code>com.iot.learnssm.firstssm.service.impl.ItemsServiceImpl</code>中实现接口，增加<code>itemsMapper</code>属性</p>
+<pre><code>@Autowired
+private ItemsMapper itemsMapper;
+
+public ItemsCustom findItemsById(Integer id) throws Exception {
+    Items items = itemsMapper.selectByPrimaryKey(id);
+    //中间对商品信息进行业务处理
+    //....
+    //返回ItemsCustom
+    ItemsCustom itemsCustom = new ItemsCustom();
+    //将items的属性值拷贝到itemsCustom
+    BeanUtils.copyProperties(items, itemsCustom);
+
+    return itemsCustom;
+}
+
+public void updateItems(Integer id, ItemsCustom itemsCustom) throws Exception {
+    //添加业务校验，通常在service接口对关键参数进行校验
+    //校验 id是否为空，如果为空抛出异常
+
+    //更新商品信息使用updateByPrimaryKeyWithBLOBs根据id更新items表中所有字段，包括 大文本类型字段
+    //updateByPrimaryKeyWithBLOBs要求必须转入id
+    itemsCustom.setId(id);
+    itemsMapper.updateByPrimaryKeyWithBLOBs(itemsCustom);
+}
+</code></pre><h2 id="开发controller"><a href="#开发controller" class="headerlink" title="开发controller"></a>开发controller</h2><p>方法：</p>
+<ul>
+<li>商品信息修改页面显示</li>
+<li><p>商品信息修改提交</p>
+<p>  //使用@Controller来标识它是一个控制器<br>  @Controller<br>  //为了对url进行分类管理 ，可以在这里定义根路径，最终访问url是根路径+子路径<br>  //比如：商品列表：/items/queryItems.action<br>  //@RequestMapping(“/items”)<br>  public class ItemsController {</p>
+<p>  @Autowired<br>  private ItemsService itemsService;</p>
+<p>  //商品查询列表<br>  @RequestMapping(“/queryItems”)<br>  //实现 对queryItems方法和url进行映射，一个方法对应一个url<br>  //一般建议将url和方法写成一样<br>  public ModelAndView queryItems() throws Exception{</p>
+<pre><code>//调用service查找数据库，查询商品列表
+List&lt;ItemsCustom&gt; itemsList = itemsService.findItemsList(null);
+
+//返回ModelAndView
+ModelAndView modelAndView = new ModelAndView();
+//相当于request的setAttribute方法,在jsp页面中通过itemsList取数据
+modelAndView.addObject(&quot;itemsList&quot;,itemsList);
+
+//指定视图
+//下边的路径，如果在视图解析器中配置jsp的路径前缀和后缀，修改为items/itemsList
+//modelAndView.setViewName(&quot;/WEB-INF/jsp/items/itemsList.jsp&quot;);
+//下边的路径配置就可以不在程序中指定jsp路径的前缀和后缀
+modelAndView.setViewName(&quot;items/itemsList&quot;);
+
+return modelAndView;
+</code></pre><p>  }</p>
+</li>
+</ul>
+<pre><code>//商品信息修改页面显示
+@RequestMapping(&quot;/editItems&quot;)
+//限制http请求方法，可以post和get
+//@RequestMapping(value=&quot;/editItems&quot;,method={RequestMethod.POST, RequestMethod.GET})
+public ModelAndView editItems()throws Exception {
+
+    //调用service根据商品id查询商品信息
+    ItemsCustom itemsCustom = itemsService.findItemsById(1);
+
+    // 返回ModelAndView
+    ModelAndView modelAndView = new ModelAndView();
+
+    //将商品信息放到model
+    modelAndView.addObject(&quot;itemsCustom&quot;, itemsCustom);
+
+    //商品修改页面
+    modelAndView.setViewName(&quot;items/editItems&quot;);
+
+    return modelAndView;
+}
+
+//商品信息修改提交
+@RequestMapping(&quot;/editItemsSubmit&quot;)
+public ModelAndView editItemsSubmit(HttpServletRequest request, Integer id, ItemsCustom itemsCustom)throws Exception {
+
+    //调用service更新商品信息，页面需要将商品信息传到此方法
+    itemsService.updateItems(id, itemsCustom);
+
+    //返回ModelAndView
+    ModelAndView modelAndView = new ModelAndView();
+    //返回一个成功页面
+    modelAndView.setViewName(&quot;success&quot;);
+    return modelAndView;
+}
+
+}
+</code></pre><h2 id="RequestMapping"><a href="#RequestMapping" class="headerlink" title="@RequestMapping"></a><code>@RequestMapping</code></h2><ul>
+<li>url映射</li>
+</ul>
+<p>定义controller方法对应的url，进行处理器映射使用。</p>
+<ul>
+<li>窄化请求映射</li>
+</ul>
+<pre><code>//使用@Controller来标识它是一个控制器
+@Controller
+//为了对url进行分类管理 ，可以在这里定义根路径，最终访问url是根路径+子路径
+//比如：商品列表：/items/queryItems.action
+@RequestMapping(&quot;/items&quot;)
+public class ItemsController {
+</code></pre><ul>
+<li>限制http请求方法</li>
+</ul>
+<p>出于安全性考虑，对http的链接进行方法限制。</p>
+<pre><code>    //商品信息修改页面显示
+//@RequestMapping(&quot;/editItems&quot;)
+//限制http请求方法，可以post和get
+@RequestMapping(value=&quot;/editItems&quot;,method={RequestMethod.POST, RequestMethod.GET})
+public ModelAndView editItems()throws Exception {
+</code></pre><p>如果限制请求为post方法，进行get请求，即将上面代码的注解改为<code>@RequestMapping(value=&quot;/editItems&quot;,method={RequestMethod.POST})</code></p>
+<p>报错，状态码405：</p>
+<p><img src="http://7xph6d.com1.z0.glb.clouddn.com/springmvc_%E9%99%90%E5%88%B6http%E8%AF%B7%E6%B1%82-GET%E6%8B%92%E7%BB%9D.png" alt="GET拒绝"></p>
+<h2 id="controller方法的返回值"><a href="#controller方法的返回值" class="headerlink" title="controller方法的返回值"></a>controller方法的返回值</h2><ul>
+<li>返回<code>ModelAndView</code></li>
+</ul>
+<p>需要方法结束时，定义ModelAndView，将model和view分别进行设置。</p>
+<ul>
+<li>返回string</li>
+</ul>
+<p>如果controller方法返回string</p>
+<p>1.表示返回逻辑视图名。</p>
+<p>真正视图(jsp路径)=前缀+逻辑视图名+后缀</p>
+<pre><code>@RequestMapping(value=&quot;/editItems&quot;,method={RequestMethod.POST,RequestMethod.GET})
+//@RequestParam里边指定request传入参数名称和形参进行绑定。
+//通过required属性指定参数是否必须要传入
+//通过defaultValue可以设置默认值，如果id参数没有传入，将默认值和形参绑定。
+//public String editItems(Model model, @RequestParam(value=&quot;id&quot;,required=true) Integer items_id)throws Exception {
+public String editItems(Model model)throws Exception {
+
+    //调用service根据商品id查询商品信息
+    ItemsCustom itemsCustom = itemsService.findItemsById(1);
+
+    //通过形参中的model将model数据传到页面
+    //相当于modelAndView.addObject方法
+    model.addAttribute(&quot;itemsCustom&quot;, itemsCustom);
+
+    return &quot;items/editItems&quot;;
+}
+</code></pre><p>2.redirect重定向</p>
+<p>商品修改提交后，重定向到商品查询列表。</p>
+<p>redirect重定向特点：浏览器地址栏中的url会变化。修改提交的request数据无法传到重定向的地址。因为重定向后重新进行request（request无法共享）</p>
+<pre><code>//重定向到商品查询列表
+//return &quot;redirect:queryItems.action&quot;;
+</code></pre><p>3.forward页面转发</p>
+<p>通过forward进行页面转发，浏览器地址栏url不变，request可以共享。</p>
+<pre><code>//页面转发
+return &quot;forward:queryItems.action&quot;;
+</code></pre><ul>
+<li>返回void</li>
+</ul>
+<p>在controller方法形参上可以定义request和response，使用request或response指定响应结果：</p>
+<p>1.使用request转向页面，如下：</p>
+<p><code>request.getRequestDispatcher(&quot;页面路径&quot;).forward(request, response);</code></p>
+<p>2.也可以通过response页面重定向：</p>
+<p><code>response.sendRedirect(&quot;url&quot;)</code></p>
+<p>3.也可以通过response指定响应结果，例如响应json数据如下：</p>
+<pre><code>response.setCharacterEncoding(&quot;utf-8&quot;);
+response.setContentType(&quot;application/json;charset=utf-8&quot;);
+response.getWriter().write(&quot;json串&quot;);
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#需求"><span class="toc-number">1.</span> <span class="toc-text">需求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开发mapper"><span class="toc-number">2.</span> <span class="toc-text">开发mapper</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开发service"><span class="toc-number">3.</span> <span class="toc-text">开发service</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开发controller"><span class="toc-number">4.</span> <span class="toc-text">开发controller</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RequestMapping"><span class="toc-number">5.</span> <span class="toc-text">@RequestMapping</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#controller方法的返回值"><span class="toc-number">6.</span> <span class="toc-text">controller方法的返回值</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

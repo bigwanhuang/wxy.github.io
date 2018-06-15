@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>springmvc学习笔记(4)-前端控制器 | Hexo</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>Hexo</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(4)-前端控制器</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月08日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p>1.前端控制器接收请求</p>
+<p>调用<code>doDispatch</code>方法</p>
+<pre><code>protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        HttpServletRequest processedRequest = request;
+        HandlerExecutionChain mappedHandler = null;
+        boolean multipartRequestParsed = false;
+
+}
+</code></pre><p>2.前端控制器调用<code>HandlerMapping</code>（处理器映射器）根据url查找Handler</p>
+<pre><code>// Determine handler for the current request.
+mappedHandler = getHandler(processedRequest);
+    /**
+         * Return the HandlerExecutionChain for this request.
+         * &lt;p&gt;Tries all handler mappings in order.
+         * @param request current HTTP request
+         * @return the HandlerExecutionChain, or {@code null} if no handler could be found
+         */
+        protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+            for (HandlerMapping hm : this.handlerMappings) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace(
+                            &quot;Testing handler map [&quot; + hm + &quot;] in DispatcherServlet with name &apos;&quot; + getServletName() + &quot;&apos;&quot;);
+                }
+                HandlerExecutionChain handler = hm.getHandler(request);
+                if (handler != null) {
+                    return handler;
+                }
+            }
+            return null;
+        }
+</code></pre><p>3.调用处理器适配器执行Handler,得到执行的结果<code>ModelAndView mv</code></p>
+<p>在<code>doDispatch</code>方法中</p>
+<pre><code>// Actually invoke the handler.
+mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+</code></pre><p>4.视图渲染，将model数据填充到request域</p>
+<p><code>doDispatch</code>-&gt;<code>processDispatchResult</code>-&gt;<code>render</code></p>
+<p>在<code>render</code>方法中,视图解析得到view</p>
+<pre><code>// We need to resolve the view name.
+view = resolveViewName(mv.getViewName(), mv.getModelInternal(), locale, request);
+</code></pre><p>调用view的渲染方法，将model数据填充到request域</p>
+<p>在<code>render</code>方法中,调用<code>View</code>接口的<code>render</code>方法</p>
+<pre><code>view.render(mv.getModelInternal(), request, response);
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
