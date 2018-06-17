@@ -48,17 +48,30 @@
   <div class="posts-list">
     
       <section>
-        <a href="/2018/06/14/aa/">
+        <a href="/2018/04/11/Docker/Docker入门/">
           <h3 class='post-head'>
-            aa
+            Docker入门
           </h3>
         </a>
         
         <div class="post-content">
           
+            
+              
+                <h2 id="什么是Docker"><a href="#什么是Docker" class="headerlink" title="什么是Docker"></a>什么是Docker</h2><p>Docker 是一个开源的应用容器引擎，而一个容器其实是一个虚拟化的独立的环境，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。容器是完全使用沙箱机制，相互之间不会有任何接口。</p>
+              
+          
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年06月14日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年04月11日</time>
+          
+            | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Docker/">Docker</a>
+  </div>
+
+
+
           
           
         </div>
@@ -95,9 +108,9 @@
       </section>
     
       <section>
-        <a href="/2017/08/16/gc算法/">
+        <a href="/2017/09/17/设计模式/命令模式/">
           <h3 class='post-head'>
-            gc算法
+            命令模式
           </h3>
         </a>
         
@@ -105,16 +118,16 @@
           
             
               
-                <h2 id="gc发生在什么时候"><a href="#gc发生在什么时候" class="headerlink" title="gc发生在什么时候"></a>gc发生在什么时候</h2><p>首先需要知道，GC又分为minor GC 和 Full Gc(也称为Major GC)。Java 堆内存分为新生代和老年代，新生代中又分为1个Eden区域 和两个 Survivor区域。<br>那么对于 Minor GC 的触发条件：大多数情况下，直接在 Eden 区中进行分配。如果 Eden区域没有足够的空间，那么就会发起一次 Minor GC；对于 Full GC（Major GC）的触发条件：也是如果老年代没有足够空间的话，那么就会进行一次 Full GC。<br>上面所说的只是一般情况下，实际上，需要考虑一个空间分配担保的问题：<br>在发生Minor GC之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象的总空间。如果大于则进行Minor GC，如果小于则看HandlePromotionFailure设置是否允许担保失败（不允许则直接Full GC）。如果允许，那么会继续检查老年代最大可用的连续空间是否大于历次晋升到老年代对象的平均大小，如果大于则尝试Minor GC（如果尝试失败也会触发Full GC），如果小于则进行Full GC。<br>但是，具体到什么时刻执行，这个是由系统来进行决定，是无法预测的。</p>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>命令模式（Command Pattern）是一种数据驱动的设计模式，它属于行为型模式。 请求以命令的形式包裹在对象中，并传给调用对象。 调用对象寻找可以处理该命令的合适的对象，并把该命令传给相应的对象，该对象执行命令。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年08月16日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月17日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/JVM/">JVM</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -125,9 +138,9 @@
       </section>
     
       <section>
-        <a href="/2017/08/15/jvm内存模型/">
+        <a href="/2017/09/17/设计模式/模板方法模式/">
           <h3 class='post-head'>
-            jvm运行时数据区域
+            模板方法模式
           </h3>
         </a>
         
@@ -135,16 +148,16 @@
           
             
               
-                <h2 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h2><p>程序计数器是一块较小的内存空间，它的作用可以看做是当前线程所执行的字节码的行号指示器。在虚拟机的概念模型里，字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器来完成。<br>由于Java 虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，在任何一个确定的时刻，一个处理器（对于多核处理器来说是一个内核）只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确的执行位置，每条线程都需要有一个独立的程序计数器，各条线程之间的计数器互不影响，独立存储，我们称这类内存区域为“线程私有”的内存。如果线程正在执行的是一个Java 方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是Natvie 方法，这个计数器值则为空（Undefined）。此内存区域是唯一一个在Java 虚拟机规范中没有规定任何OutOfMemoryError 情况的区域。</p>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在模板方法模式（Template Method Pattern）中，一个抽象类公开定义了执行它的方法的方式/模板。 它的子类可以按需要重写方法实现，但调用将以抽象类中定义的方式进行。这种类型的设计模式属于行为型模式。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年08月15日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月17日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/JVM/">JVM</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -155,9 +168,9 @@
       </section>
     
       <section>
-        <a href="/2017/07/26/java/ArrayList/">
+        <a href="/2017/09/17/设计模式/策略模式/">
           <h3 class='post-head'>
-            ArrayList
+            策略模式
           </h3>
         </a>
         
@@ -165,16 +178,16 @@
           
             
               
-                <h2 id="一、ArrayList的基本特点"><a href="#一、ArrayList的基本特点" class="headerlink" title="一、ArrayList的基本特点"></a>一、ArrayList的基本特点</h2><ol>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在策略模式（Strategy Pattern）中，一个类的行为或其算法可以在运行时更改。 这种类型的设计模式属于行为型模式。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月26日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月17日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/java/">java</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -185,9 +198,9 @@
       </section>
     
       <section>
-        <a href="/2017/07/09/Redis/Redis缓存设计/">
+        <a href="/2017/09/16/设计模式/状态模式/">
           <h3 class='post-head'>
-            Redis缓存设计
+            状态模式
           </h3>
         </a>
         
@@ -195,16 +208,16 @@
           
             
               
-                <h2 id="缓存更新策略"><a href="#缓存更新策略" class="headerlink" title="缓存更新策略"></a>缓存更新策略</h2><ol>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在状态模式（State Pattern）中，类的行为是基于它的状态改变的。这种类型的设计模式属于行为型模式。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月09日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月16日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -215,9 +228,9 @@
       </section>
     
       <section>
-        <a href="/2017/07/08/Redis/Redis集群/">
+        <a href="/2017/09/16/设计模式/单例模式/">
           <h3 class='post-head'>
-            Redis集群
+            单例模式
           </h3>
         </a>
         
@@ -225,16 +238,16 @@
           
             
               
-                <h2 id="常见的哈希分区规则"><a href="#常见的哈希分区规则" class="headerlink" title="常见的哈希分区规则"></a>常见的哈希分区规则</h2><ul>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Singleton（单例模式）是一种常用的设计模式。 在Java应用中，单例对象能保证在一个JVM中，该对象只有一个实例存在。 </p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月08日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月16日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -245,9 +258,9 @@
       </section>
     
       <section>
-        <a href="/2017/07/07/java/LinkedList/">
+        <a href="/2017/09/16/设计模式/代理模式/">
           <h3 class='post-head'>
-            IO
+            代理模式
           </h3>
         </a>
         
@@ -255,16 +268,16 @@
           
             
               
-                <h2 id="一、概述"><a href="#一、概述" class="headerlink" title="一、概述"></a>一、概述</h2><blockquote>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在代理模式（Proxy Pattern）中，一个类代表另一个类的功能。 这种类型的设计模式属于结构型模式。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月07日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月16日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/java/">java</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -275,9 +288,9 @@
       </section>
     
       <section>
-        <a href="/2017/07/07/Redis/Redis哨兵/">
+        <a href="/2017/09/16/设计模式/原型模式/">
           <h3 class='post-head'>
-            Redis哨兵
+            原型模式
           </h3>
         </a>
         
@@ -285,16 +298,16 @@
           
             
               
-                <h2 id="主从复制的问题"><a href="#主从复制的问题" class="headerlink" title="主从复制的问题"></a>主从复制的问题</h2><ul>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>原型模式（Prototype Pattern）是用于创建重复的对象，同时又能保证性能。 这种类型的设计模式属于创建型模式，它提供了一种创建对象的最佳方式。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月07日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月16日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -305,9 +318,9 @@
       </section>
     
       <section>
-        <a href="/2017/07/06/Redis/Redis复制/">
+        <a href="/2017/09/16/设计模式/观察者模式/">
           <h3 class='post-head'>
-            Redis复制
+            观察者模式
           </h3>
         </a>
         
@@ -315,16 +328,16 @@
           
             
               
-                <h2 id="建立复制"><a href="#建立复制" class="headerlink" title="建立复制"></a>建立复制</h2><p>参与复制的Redis实例划分为主节点和从节点。默认情况下，Redis都是主节点。每个从节点只能有一个主节点，而主节点可以同时具有多个从节点。复制的数据流是单向的，只能由主节点复制到从节<br>点。配置复制的方式有以下三种：</p>
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>当对象间存在一对多关系时，则使用观察者模式（Observer Pattern）。 比如，当一个对象被修改时，则会自动通知它的依赖对象。观察者模式属于行为型模式。</p>
               
           
         </div>
         <div class='post-meta'>
-          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月06日</time>
+          <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年09月16日</time>
           
             | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+    <a class="article-category-link" href="/categories/设计模式/">设计模式</a>
   </div>
 
 
@@ -344,7 +357,7 @@
           文章分类
         </h1>
         <div class="content">
-          <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Elasticsearch/">Elasticsearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/SpringMVC/">SpringMVC</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据结构与算法/">数据结构与算法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/杂谈/">杂谈</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影评论2/">电影评论2</a></li></ul>
+          <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Elasticsearch/">Elasticsearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Git/">Git</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MongoDB/">MongoDB</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Mybatis/">Mybatis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/SpringMVC/">SpringMVC</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据结构与算法/">数据结构与算法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a></li></ul>
         </div>
       </div>
     
