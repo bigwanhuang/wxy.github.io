@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>mybatis学习笔记(5)-配置文件 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>mybatis学习笔记(5)-配置文件</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月05日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Mybatis/">Mybatis</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p>##SqlMapConfig.xml中配置的内容和顺序如下</p>
+<ul>
+<li>properties（属性）</li>
+<li>settings（全局配置参数）</li>
+<li><strong>typeAliases（类型别名）</strong></li>
+<li>typeHandlers（类型处理器）</li>
+<li><em>objectFactory（对象工厂）</em></li>
+<li><em>plugins（插件）</em></li>
+<li>environments（环境集合属性对象）</li>
+<li>environment（环境子属性对象）</li>
+<li>transactionManager（事务管理）</li>
+<li>dataSource（数据源）</li>
+<li><strong>mappers（映射器）</strong></li>
+</ul>
+<p>(注：粗体是重点，斜体不常用)</p>
+<h2 id="properties-属性"><a href="#properties-属性" class="headerlink" title="properties(属性)"></a>properties(属性)</h2><p>将数据库连接参数单独配置在db.properties中，只需要在SqlMapConfig.xml中加载db.properties的属性值。在SqlMapConfig.xml中就不需要对数据库连接参数硬编码。</p>
+<p>将数据库连接参数只配置在db.properties中。原因：方便对参数进行统一管理，其它xml可以引用该db.properties。</p>
+<pre><code>jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://120.25.162.238:3306/mybatis001?characterEncoding=utf-8
+jdbc.username=root
+jdbc.password=123
+</code></pre><p>在sqlMapConfig.xml加载属性文件：</p>
+<pre><code>&lt;properties resource=&quot;db.properties&quot;&gt;
+        &lt;!--properties中还可以配置一些属性名和属性值  --&gt;
+        &lt;!-- &lt;property name=&quot;jdbc.driver&quot; value=&quot;&quot;/&gt; --&gt;
+&lt;/properties&gt;
+
+&lt;!-- 和spring整合后 environments配置将废除--&gt;
+&lt;environments default=&quot;development&quot;&gt;
+    &lt;environment id=&quot;development&quot;&gt;
+        &lt;!-- 使用jdbc事务管理，事务控制由mybatis--&gt;
+        &lt;transactionManager type=&quot;JDBC&quot; /&gt;
+        &lt;!-- 数据库连接池,由mybatis管理--&gt;
+        &lt;dataSource type=&quot;POOLED&quot;&gt;
+            &lt;property name=&quot;driver&quot; value=&quot;${jdbc.driver}&quot; /&gt;
+            &lt;property name=&quot;url&quot; value=&quot;${jdbc.url}&quot; /&gt;
+            &lt;property name=&quot;username&quot; value=&quot;${jdbc.username}&quot; /&gt;
+            &lt;property name=&quot;password&quot; value=&quot;${jdbc.password}&quot; /&gt;
+        &lt;/dataSource&gt;
+    &lt;/environment&gt;
+&lt;/environments&gt;
+</code></pre><p>注意： MyBatis 将按照下面的顺序(优先级)来加载属性：</p>
+<ul>
+<li>在<code>properties</code>元素体内定义的属性首先被读取。 </li>
+<li>然后会读取<code>properties</code>元素中resource或url加载的属性，它会覆盖已读取的同名属性。 </li>
+<li>最后读取<code>parameterType</code>传递的属性，它会覆盖已读取的同名属性。</li>
+</ul>
+<p>建议：</p>
+<ul>
+<li>不要在<code>properties</code>元素体内添加任何属性值，只将属性值定义在properties文件中。</li>
+<li>在properties文件中定义属性名要有一定的特殊性，如：XXXXX.XXXXX.XXXX</li>
+</ul>
+<h2 id="settings-全局参数配置"><a href="#settings-全局参数配置" class="headerlink" title="settings(全局参数配置)"></a>settings(全局参数配置)</h2><p>mybatis框架在运行时可以调整一些运行参数,比如：开启二级缓存、开启延迟加载…</p>
+<p>全局参数将会影响mybatis的运行行为。具体参考官网：</p>
+<blockquote>
+<p><a href="http://www.mybatis.org/mybatis-3/configuration.html#settings" target="_blank" rel="noopener">mybatis-settings</a></p>
+</blockquote>
+<h2 id="typeAliases-类型别名"><a href="#typeAliases-类型别名" class="headerlink" title="typeAliases(类型别名)"></a>typeAliases(类型别名)</h2><p>在mapper.xml中，定义很多的statement，statement需要<code>parameterType</code>指定输入参数的类型、需要<code>resultType</code>指定输出结果的映射类型。</p>
+<p>如果在指定类型时输入类型全路径，不方便进行开发，可以针对<code>parameterType</code>或<code>resultType</code>指定的类型定义一些别名，在mapper.xml中通过别名定义，方便开发。</p>
+<ul>
+<li>mybatis默认支持别名</li>
+</ul>
+<blockquote>
+<p>参考 <a href="http://www.mybatis.org/mybatis-3/configuration.html#typeAliases" target="_blank" rel="noopener">typeAliases</a></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">别名</th>
+<th style="text-align:left">映射的类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">_byte</td>
+<td style="text-align:left">byte</td>
+</tr>
+<tr>
+<td style="text-align:left">_long</td>
+<td style="text-align:left">long</td>
+</tr>
+<tr>
+<td style="text-align:left">_short</td>
+<td style="text-align:left">short</td>
+</tr>
+<tr>
+<td style="text-align:left">_int</td>
+<td style="text-align:left">int</td>
+</tr>
+<tr>
+<td style="text-align:left">_integer</td>
+<td style="text-align:left">int</td>
+</tr>
+<tr>
+<td style="text-align:left">_double</td>
+<td style="text-align:left">double</td>
+</tr>
+<tr>
+<td style="text-align:left">_float</td>
+<td style="text-align:left">float</td>
+</tr>
+<tr>
+<td style="text-align:left">_boolean</td>
+<td style="text-align:left">boolean</td>
+</tr>
+<tr>
+<td style="text-align:left">string</td>
+<td style="text-align:left">String</td>
+</tr>
+<tr>
+<td style="text-align:left">byte</td>
+<td style="text-align:left">Byte</td>
+</tr>
+<tr>
+<td style="text-align:left">long</td>
+<td style="text-align:left">Long</td>
+</tr>
+<tr>
+<td style="text-align:left">short</td>
+<td style="text-align:left">Short</td>
+</tr>
+<tr>
+<td style="text-align:left">int</td>
+<td style="text-align:left">Integer</td>
+</tr>
+<tr>
+<td style="text-align:left">integer</td>
+<td style="text-align:left">Integer</td>
+</tr>
+<tr>
+<td style="text-align:left">double</td>
+<td style="text-align:left">Double</td>
+</tr>
+<tr>
+<td style="text-align:left">float</td>
+<td style="text-align:left">Float</td>
+</tr>
+<tr>
+<td style="text-align:left">boolean</td>
+<td style="text-align:left">Boolean</td>
+</tr>
+<tr>
+<td style="text-align:left">date</td>
+<td style="text-align:left">Date</td>
+</tr>
+<tr>
+<td style="text-align:left">decimal</td>
+<td style="text-align:left">BigDecimal</td>
+</tr>
+<tr>
+<td style="text-align:left">bigdecimal</td>
+<td style="text-align:left">BigDecimal</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>自定义别名</li>
+<li>单个别名定义 </li>
+<li>批量定义别名（常用）</li>
+</ul>
+<pre><code>&lt;!-- 别名定义 --&gt;
+&lt;typeAliases&gt;
+
+    &lt;!-- 针对单个别名定义
+    type：类型的路径
+    alias：别名
+     --&gt;
+    &lt;!-- &lt;typeAlias type=&quot;cn.itcast.mybatis.po.User&quot; alias=&quot;user&quot;/&gt; --&gt;
+    &lt;!-- 批量别名定义
+    指定包名，mybatis自动扫描包中的po类，自动定义别名，别名就是类名（首字母大写或小写都可以）
+    --&gt;
+    &lt;package name=&quot;com.iot.mybatis.po&quot;/&gt;
+
+&lt;/typeAliases&gt;
+</code></pre><h2 id="typeHandlers-类型处理器"><a href="#typeHandlers-类型处理器" class="headerlink" title="typeHandlers(类型处理器)"></a>typeHandlers(类型处理器)</h2><p>mybatis中通过typeHandlers完成jdbc类型和java类型的转换。例如：</p>
+<pre><code>&lt;select id=&quot;findUserById&quot; parameterType=&quot;int&quot; resultType=&quot;user&quot;&gt;
+        select * from user where id = #{id}
+&lt;/select&gt;
+</code></pre><p>mybatis自带的类型处理器基本上满足日常需求，不需要单独定义。</p>
+<p>mybatis支持类型处理器</p>
+<h2 id="mappers-映射配置"><a href="#mappers-映射配置" class="headerlink" title="mappers(映射配置)"></a>mappers(映射配置)</h2><ul>
+<li><p>通过resource加载单个映射文件</p>
+<pre><code>&lt;!--通过resource方法一次加载一个映射文件 --&gt;
+&lt;mapper resource=&quot;mapper/UserMapper.xml&quot;/&gt;
+</code></pre></li>
+</ul>
+<ul>
+<li><p>通过mapper接口加载单个mapper</p>
+<pre><code> &lt;!-- 通过mapper接口加载单个 映射文件
+        遵循一些规范：需要将mapper接口类名和mapper.xml映射文件名称保持一致，且在一个目录中
+        上边规范的前提是：使用的是mapper代理方法
+         --&gt;
+&lt;mapper class=&quot;com.iot.mybatis.mapper.UserMapper&quot;/&gt; 
+</code></pre></li>
+</ul>
+<p>目录示例</p>
+<pre><code>com.iot.mybatis.mapper------------------package包
+   |----UserMapper.java
+   |----UserMapper.xml
+</code></pre><ul>
+<li>批量加载mapper(推荐使用)</li>
+</ul>
+<pre><code>&lt;!-- 批量加载mapper
+        指定mapper接口的包名，mybatis自动扫描包下边所有mapper接口进行加载
+        遵循一些规范：需要将mapper接口类名和mapper.xml映射文件名称保持一致，且在一个目录 中
+        上边规范的前提是：使用的是mapper代理方法
+         --&gt;
+&lt;package name=&quot;com.iot.mybatis.mapper&quot;/&gt;
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#properties-属性"><span class="toc-number">1.</span> <span class="toc-text">properties(属性)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#settings-全局参数配置"><span class="toc-number">2.</span> <span class="toc-text">settings(全局参数配置)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#typeAliases-类型别名"><span class="toc-number">3.</span> <span class="toc-text">typeAliases(类型别名)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#typeHandlers-类型处理器"><span class="toc-number">4.</span> <span class="toc-text">typeHandlers(类型处理器)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mappers-映射配置"><span class="toc-number">5.</span> <span class="toc-text">mappers(映射配置)</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

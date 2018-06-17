@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>入门 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>入门</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年04月26日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Nginx/">Nginx</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h1 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h1><h2 id="Install"><a href="#Install" class="headerlink" title="Install"></a>Install</h2><ul>
+<li>下载</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget http://nginx.org/download/nginx-1.10.3.tar.gz</span><br></pre></td></tr></table></figure>
+<ul>
+<li>安装依赖包</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y gcc gcc-c++ pcre pcre-devel zlib zlib-devel openssl openssl-devel</span><br></pre></td></tr></table></figure>
+<ul>
+<li>预设几个文件夹，方便等下安装的时候有些文件可以进行存放</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /usr/<span class="built_in">local</span>/nginx /var/<span class="built_in">log</span>/nginx /var/temp/nginx /var/lock/nginx</span><br></pre></td></tr></table></figure>
+<ul>
+<li>解压Nginx</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zxvf nginx-1.10.3.tar.gz</span><br></pre></td></tr></table></figure>
+<ul>
+<li>进入解压后的目录</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> nginx-1.10.3/</span><br></pre></td></tr></table></figure>
+<ul>
+<li>编译配置</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">./configure \</span><br><span class="line">--prefix=/usr/local/nginx \</span><br><span class="line">--pid-path=/var/local/nginx/nginx.pid \</span><br><span class="line">--lock-path=/var/lock/nginx/nginx.lock \</span><br><span class="line">--error-log-path=/var/log/nginx/error.log \</span><br><span class="line">--http-log-path=/var/log/nginx/access.log \</span><br><span class="line">--with-http_gzip_static_module \</span><br><span class="line">--http-client-body-temp-path=/var/temp/nginx/client \</span><br><span class="line">--http-proxy-temp-path=/var/temp/nginx/proxy \</span><br><span class="line">--http-fastcgi-temp-path=/var/temp/nginx/fastcgi \</span><br><span class="line">--http-uwsgi-temp-path=/var/temp/nginx/uwsgi \</span><br><span class="line">--with-http_ssl_module \</span><br><span class="line">--http-scgi-temp-path=/var/temp/nginx/scgi</span><br></pre></td></tr></table></figure>
+<ul>
+<li>编译安装</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>启动 Nginx</p>
+<ul>
+<li><p>先检查是否在 /usr/local 目录下生成了 Nginx 等相关文件：<code>cd /usr/local/nginx;ll</code>，正常的效果应该是显示这样的：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">drwxr-xr-x. 2 root root 4096 3月  22 16:21 conf</span><br><span class="line">drwxr-xr-x. 2 root root 4096 3月  22 16:21 html</span><br><span class="line">drwxr-xr-x. 2 root root 4096 3月  22 16:21 sbin</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>停止防火墙：<code>service iptables stop</code></p>
+<ul>
+<li>或是把 80 端口加入到的排除列表：</li>
+<li><code>sudo iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT</code></li>
+<li><code>sudo service iptables save</code></li>
+<li><code>sudo service iptables restart</code></li>
+</ul>
+</li>
+<li>启动：<code>/usr/local/nginx/sbin/nginx</code>，启动完成 shell 是不会有输出的</li>
+<li>检查 时候有 Nginx 进程：<code>ps aux | grep nginx</code>，正常是显示 3 个结果出来 </li>
+<li>检查 Nginx 是否启动并监听了 80 端口：<code>netstat -ntulp | grep 80</code> </li>
+<li>访问：<code>192.168.1.114</code>，如果能看到：<code>Welcome to nginx!</code>，即可表示安装成功</li>
+<li>检查 Nginx 启用的配置文件是哪个：<code>/usr/local/nginx/sbin/nginx -t</code></li>
+<li>刷新 Nginx 配置后重启：<code>/usr/local/nginx/sbin/nginx -s reload</code></li>
+<li>停止 Nginx：<code>/usr/local/nginx/sbin/nginx -s stop</code></li>
+<li>如果访问不了，或是出现其他信息看下错误立即：<code>vim /var/log/nginx/error.log</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="把-Nginx-添加到系统服务中"><a href="#把-Nginx-添加到系统服务中" class="headerlink" title="把 Nginx 添加到系统服务中"></a>把 Nginx 添加到系统服务中</h2><ul>
+<li>新建文件：<code>vim /etc/init.d/nginx</code></li>
+<li>添加如下内容：</li>
+</ul>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#nginx执行程序路径需要修改</span></span><br><span class="line">nginxd=/usr/local/nginx/sbin/nginx</span><br><span class="line"></span><br><span class="line"><span class="comment"># nginx配置文件路径需要修改</span></span><br><span class="line">nginx_config=/usr/local/nginx/conf/nginx.conf</span><br><span class="line"></span><br><span class="line"><span class="comment"># pid 地址需要修改</span></span><br><span class="line">nginx_pid=/var/local/nginx/nginx.pid</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">RETVAL=0</span><br><span class="line">prog="nginx"</span><br><span class="line"></span><br><span class="line"><span class="comment"># Source function library.</span></span><br><span class="line">. /etc/rc.d/init.d/functions</span><br><span class="line"><span class="comment"># Source networking configuration.</span></span><br><span class="line">. /etc/sysconfig/network</span><br><span class="line"><span class="comment"># Check that networking is up.</span></span><br><span class="line">[ $&#123;NETWORKING&#125; = "no" ] &amp;&amp; exit 0</span><br><span class="line">[ -x $nginxd ] || exit 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># Start nginx daemons functions.</span></span><br><span class="line">start() &#123;</span><br><span class="line">if [ -e $nginx_pid ];then</span><br><span class="line">   <span class="attribute">echo</span> <span class="string">"nginx already running...."</span></span><br><span class="line">   exit <span class="number">1</span></span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">echo -n $<span class="string">"Starting <span class="variable">$prog</span>: "</span></span><br><span class="line">daemon <span class="variable">$nginxd</span> -c <span class="variable">$&#123;nginx_config&#125;</span></span><br><span class="line">RETVAL=$?</span><br><span class="line">echo</span><br><span class="line">[ <span class="variable">$RETVAL</span> = <span class="number">0</span> ] &amp;&amp; touch /var/lock/subsys/nginx</span><br><span class="line">return <span class="variable">$RETVAL</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># Stop nginx daemons functions.</span></span><br><span class="line"><span class="comment"># pid 地址需要修改</span></span><br><span class="line">stop() &#123;</span><br><span class="line">	<span class="attribute">echo</span> -n $<span class="string">"Stopping <span class="variable">$prog</span>: "</span></span><br><span class="line">	killproc <span class="variable">$nginxd</span></span><br><span class="line">	RETVAL=$?</span><br><span class="line">	echo</span><br><span class="line">	[ <span class="variable">$RETVAL</span> = <span class="number">0</span> ] &amp;&amp; rm -f /var/lock/subsys/nginx /var/local/nginx/nginx.pid</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># reload nginx service functions.</span></span><br><span class="line">reload() &#123;</span><br><span class="line">	<span class="attribute">echo</span> -n $<span class="string">"Reloading <span class="variable">$prog</span>: "</span></span><br><span class="line">	<span class="comment">#kill -HUP `cat $&#123;nginx_pid&#125;`</span></span><br><span class="line">	killproc <span class="variable">$nginxd</span> -HUP</span><br><span class="line">	RETVAL=$?</span><br><span class="line">	echo</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># See how we were called.</span></span><br><span class="line">case <span class="string">"<span class="variable">$1</span>"</span> in</span><br><span class="line">	start)</span><br><span class="line">		start</span><br><span class="line">		;;</span><br><span class="line">	stop)</span><br><span class="line">		stop</span><br><span class="line">		;;</span><br><span class="line">	reload)</span><br><span class="line">		reload</span><br><span class="line">		;;</span><br><span class="line">	restart)</span><br><span class="line">		stop</span><br><span class="line">		start</span><br><span class="line">		;;</span><br><span class="line">	status)</span><br><span class="line">		<span class="attribute">status</span> <span class="variable">$prog</span></span><br><span class="line">		RETVAL=$?</span><br><span class="line">		;;</span><br><span class="line">	*)</span><br><span class="line"></span><br><span class="line">	<span class="attribute">echo</span> $<span class="string">"Usage: <span class="variable">$prog</span> &#123;start|stop|restart|reload|status|help&#125;"</span></span><br><span class="line">	exit <span class="number">1</span></span><br><span class="line"></span><br><span class="line">esac</span><br><span class="line">exit <span class="variable">$RETVAL</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改权限：<code>chmod 755 /etc/init.d/nginx</code></li>
+<li>启动服务：<code>service nginx start</code></li>
+<li>停止服务：<code>service nginx stop</code></li>
+<li>重启服务：<code>service nginx restart</code></li>
+</ul>
+<h2 id="Nginx-配置"><a href="#Nginx-配置" class="headerlink" title="Nginx 配置"></a>Nginx 配置</h2><ul>
+<li>Nginx 默认配置文件：<code>vim /usr/local/nginx/conf/nginx.conf</code></li>
+</ul>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /sov/ &#123;</span><br><span class="line">    <span class="attribute">proxy_pass</span>   http://localhost:8080/;</span><br><span class="line">    <span class="attribute">proxy_redirect</span> default;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Nginx"><span class="toc-number">1.</span> <span class="toc-text">Nginx</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Install"><span class="toc-number">1.1.</span> <span class="toc-text">Install</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#把-Nginx-添加到系统服务中"><span class="toc-number">1.2.</span> <span class="toc-text">把 Nginx 添加到系统服务中</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Nginx-配置"><span class="toc-number">1.3.</span> <span class="toc-text">Nginx 配置</span></a></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

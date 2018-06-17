@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    
+  <title>springmvc学习笔记(15)-数据回显 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(15)-数据回显</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月09日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p>数据回显：提交后，如果出现错误，将刚才提交的数据回显到刚才的提交页面。</p>
+<h2 id="pojo数据回显方法"><a href="#pojo数据回显方法" class="headerlink" title="pojo数据回显方法"></a>pojo数据回显方法</h2><p>1.springmvc默认对pojo数据进行回显。</p>
+<p><strong>pojo数据传入controller方法后，springmvc自动将pojo数据放到request域，key等于pojo类型（首字母小写）</strong></p>
+<p>使用<code>@ModelAttribute</code>指定pojo回显到页面在request中的key</p>
+<p>2.<code>@ModelAttribute</code>还可以将方法的返回值传到页面</p>
+<p>在商品查询列表页面，通过商品类型查询商品信息。在controller中定义商品类型查询方法，最终将商品类型传到页面。</p>
+<pre><code> // 商品分类
+//itemtypes表示最终将方法返回值放在request中的key
+@ModelAttribute(&quot;itemtypes&quot;)
+public Map&lt;String, String&gt; getItemTypes() {
+
+    Map&lt;String, String&gt; itemTypes = new HashMap&lt;String, String&gt;();
+    itemTypes.put(&quot;101&quot;, &quot;数码&quot;);
+    itemTypes.put(&quot;102&quot;, &quot;母婴&quot;);
+
+    return itemTypes;
+}
+</code></pre><p>页面上可以得到itemTypes数据。</p>
+<pre><code>&lt;td&gt;
+    商品名称：&lt;input name=&quot;itemsCustom.name&quot; /&gt;
+    商品类型：
+    &lt;select name=&quot;itemtype&quot;&gt;
+        &lt;c:forEach items=&quot;${itemtypes}&quot; var=&quot;itemtype&quot;&gt;
+            &lt;option value=&quot;${itemtype.key }&quot;&gt;${itemtype.value }&lt;/option&gt;
+        &lt;/c:forEach&gt;
+    &lt;/select&gt;
+&lt;/td&gt;
+</code></pre><p>3.使用最简单方法使用model，可以不用<code>@ModelAttribute</code></p>
+<pre><code>//可以直接使用model将提交pojo回显到页面
+//model.addAttribute(&quot;items&quot;, itemsCustom);
+</code></pre><h2 id="简单类型数据回显"><a href="#简单类型数据回显" class="headerlink" title="简单类型数据回显"></a>简单类型数据回显</h2><p>使用最简单方法使用model</p>
+<p><code>model.addAttribute(&quot;id&quot;, id);</code></p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#pojo数据回显方法"><span class="toc-number">1.</span> <span class="toc-text">pojo数据回显方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#简单类型数据回显"><span class="toc-number">2.</span> <span class="toc-text">简单类型数据回显</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
