@@ -129,7 +129,7 @@
 <h2 id="Nginx-配置"><a href="#Nginx-配置" class="headerlink" title="Nginx 配置"></a>Nginx 配置</h2><ul>
 <li>Nginx 默认配置文件：<code>vim /usr/local/nginx/conf/nginx.conf</code></li>
 </ul>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">location <span class="regexp">/sov/</span> &#123;</span><br><span class="line">    proxy_pass   <span class="string">http:</span><span class="comment">//localhost:8080/;</span></span><br><span class="line">    proxy_redirect <span class="keyword">default</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">location /sov/ &#123;</span><br><span class="line">    proxy_pass   http://localhost:8080/;</span><br><span class="line">    proxy_redirect default;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
         </section>
     </article>
