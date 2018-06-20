@@ -64,13 +64,59 @@
             
             
           </div>
-          
+          <h2 id="顺序查找"><a href="#顺序查找" class="headerlink" title="顺序查找"></a>顺序查找</h2><p>思想：顺序查找也称为线形查找，属于无序查找算法。从数据结构线形表的一端开始，顺序扫描，依次将扫描到的结点关键字与给定值k相比较，若相等则表示查找成功；若扫描结束仍没有找到关键字等于k的结点，表示查找失败。</p>
+<pre><code>int SequenceSearch(int[] a, int value) {
+    for (int i = 0; i &lt; a.length; i++) {
+        if (a[i] == value) {
+            return i;
+        }
+    }
+    return -1;
+}
+</code></pre><h2 id="二分查找"><a href="#二分查找" class="headerlink" title="二分查找"></a>二分查找</h2><p>思想：也称为是折半查找，属于有序查找算法。用给定值k先与中间结点的关键字比较，中间结点把线形表分成两个子表，若相等则查找成功；若不相等，再根据k与该中间结点关键字的比较结果确定下一步查找哪个子表，这样递归进行，直到查找到或查找结束发现表中没有这样的结点。</p>
+<pre><code>int SequenceSearch1(int[] a, int value) {
+    int left = 0;
+    int right = a.length - 1;
+    int mid=0;
+    while (left &lt;= right) {
+         mid = left + (right - left) / 2;
+        if (a[mid] == value) {
+            return mid;
+        }
+        if (a[mid] &gt; value) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return -1;
+}
+</code></pre><h2 id="插值查找"><a href="#插值查找" class="headerlink" title="插值查找"></a>插值查找</h2><p>思想：也称为是折半查找，属于有序查找算法。用给定值k先与中间结点的关键字比较，中间结点把线形表分成两个子表，若相等则查找成功；若不相等，再根据k与该中间结点关键字的比较结果确定下一步查找哪个子表，这样递归进行，直到查找到或查找结束发现表中没有这样的结点</p>
+<pre><code>int InsertSearch(int[] a,int value,int left,int right) {
+
+    int mid=left+(value-a[left])/(a[right]-a[left])*(right-left);
+    if(a[mid]==value)
+        return mid;
+    if(a[mid]&gt;value)
+        return InsertSearch(a,value,left,mid-1);
+    else {
+        return InsertSearch(a,value,mid+1,right);
+    }
+}
+</code></pre>
         </section>
     </article>
     
         
   </div>
   <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#顺序查找"><span class="toc-number">1.</span> <span class="toc-text">顺序查找</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二分查找"><span class="toc-number">2.</span> <span class="toc-text">二分查找</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#插值查找"><span class="toc-number">3.</span> <span class="toc-text">插值查找</span></a></li></ol>
+        </div>
+    </div>
     
   </aside>
 </main>
