@@ -65,44 +65,8 @@
             
           </div>
           <h3 id="浅拷贝"><a href="#浅拷贝" class="headerlink" title="浅拷贝"></a>浅拷贝</h3><p>被复制对象的所有变量都含有与原来的对象相同的值，而所有的对其他对象的引用仍然指向原来的对象。换言之，浅复制仅仅复制所考虑的对象，而不复制它所引用的对象。</p>
-<p>下面我们看一个例子：</p>
-<pre><code>public class Book implements Cloneable {
-    String bookName;
-    double price;
-    Person author;
-
-    public Book(String bn, double price, Person author) {
-        bookName = bn;
-        this.price = price;
-        this.author = author;
-    }
-
-    public Object clone() {
-        Book b = null;
-        try {
-            b = (Book) super.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return b;
-    }
-
-    public static void main(String args[]) {
-        Person p = new Person(&quot;Dream&quot;, 34);
-        Book book1 = new Book(&quot;Java开发&quot;, 30.00, p);
-        Book book2 = (Book) b1.clone();
-        book2.price = 44.00;
-        book2.author.setAge(45);
-        book2.author.setName(&quot;Fish&quot;);
-        book2.bookName = &quot;Android开发&quot;;
-        System.out.print(&quot;age = &quot; + book1.author.getAge() + &quot;  name = &quot; 
-        + book1.bookName + &quot;     price = &quot; + book1.price);
-        System.out.println();
-        System.out.print(&quot;age = &quot; + book2.author.getAge() + &quot;  name = &quot; 
-        + book2.bookName + &quot;     price = &quot; + book2.price);
-    }
-}
-</code></pre><blockquote>
+<p>下面我们看一个例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">public class Book implements Cloneable &#123;</span><br><span class="line">	String bookName;</span><br><span class="line">	double price;</span><br><span class="line">	Person author;</span><br><span class="line"></span><br><span class="line">	public Book(String bn, double price, Person author) &#123;</span><br><span class="line">		bookName = bn;</span><br><span class="line">		this.price = price;</span><br><span class="line">		this.author = author;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	public Object clone() &#123;</span><br><span class="line">		Book b = null;</span><br><span class="line">		try &#123;</span><br><span class="line">			b = (Book) super.clone();</span><br><span class="line">		&#125; catch (CloneNotSupportedException e) &#123;</span><br><span class="line">			e.printStackTrace();</span><br><span class="line">		&#125;</span><br><span class="line">		return b;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	public static void main(String args[]) &#123;</span><br><span class="line">		Person p = new Person(&quot;Dream&quot;, 34);</span><br><span class="line">		Book book1 = new Book(&quot;Java开发&quot;, 30.00, p);</span><br><span class="line">		Book book2 = (Book) b1.clone();</span><br><span class="line">		book2.price = 44.00;</span><br><span class="line">		book2.author.setAge(45);</span><br><span class="line">		book2.author.setName(&quot;Fish&quot;);</span><br><span class="line">		book2.bookName = &quot;Android开发&quot;;</span><br><span class="line">		System.out.print(&quot;age = &quot; + book1.author.getAge() + &quot;  name = &quot; </span><br><span class="line">		+ book1.bookName + &quot;     price = &quot; + book1.price);</span><br><span class="line">		System.out.println();</span><br><span class="line">		System.out.print(&quot;age = &quot; + book2.author.getAge() + &quot;  name = &quot; </span><br><span class="line">		+ book2.bookName + &quot;     price = &quot; + book2.price);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
 <p>结果：</p>
 </blockquote>
 <blockquote>
