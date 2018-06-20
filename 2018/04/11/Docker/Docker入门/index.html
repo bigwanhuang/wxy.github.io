@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>Docker入门 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>Docker入门</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年04月11日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Docker/">Docker</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="什么是Docker"><a href="#什么是Docker" class="headerlink" title="什么是Docker"></a>什么是Docker</h2><p>Docker 是一个开源的应用容器引擎，而一个容器其实是一个虚拟化的独立的环境，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。容器是完全使用沙箱机制，相互之间不会有任何接口。</p>
+<ul>
+<li>Docker 的局限性之一，它只能用在 64 位的操作系统上。</li>
+</ul>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">yum install docker        <span class="comment"># CentOS 中安装</span></span><br><span class="line">apt-get install docker-ce <span class="comment"># Ubuntu 中安装</span></span><br><span class="line">pacman -S docker          <span class="comment"># Arch 中安装</span></span><br><span class="line">emerge --ask docker       <span class="comment"># Gentoo 中安装</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#=====================</span></span><br><span class="line"></span><br><span class="line">docker version      <span class="comment"># 通过查看版本，检查安装是否成功</span></span><br><span class="line"><span class="comment"># Client:</span></span><br><span class="line"><span class="comment">#  Version:         1.12.6</span></span><br><span class="line"><span class="comment">#  API version:     1.24</span></span><br><span class="line"><span class="comment">#  Package version: docker-1.12.6-55.gitc4618fb.el7.centos.x86_64</span></span><br><span class="line"><span class="comment">#  Go version:      go1.8.3</span></span><br><span class="line"><span class="comment">#  Git commit:      c4618fb/1.12.6</span></span><br><span class="line"><span class="comment">#  Built:           Thu Apr 11 22:33:52 2018</span></span><br><span class="line"><span class="comment">#  OS/Arch:         linux/amd64</span></span><br><span class="line"><span class="comment"># </span></span><br><span class="line"><span class="comment"># Server:</span></span><br><span class="line"><span class="comment">#  Version:         1.12.6</span></span><br><span class="line"><span class="comment">#  API version:     1.24</span></span><br><span class="line"><span class="comment">#  Package version: docker-1.12.6-55.gitc4618fb.el7.centos.x86_64</span></span><br><span class="line"><span class="comment">#  Go version:      go1.8.3</span></span><br><span class="line"><span class="comment">#  Git commit:      c4618fb/1.12.6</span></span><br><span class="line"><span class="comment">#  Built:           Thu Apr 11 22:33:52 2018</span></span><br><span class="line"><span class="comment">#  OS/Arch:         linux/amd64</span></span><br></pre></td></tr></table></figure>
+<h2 id="命令介绍"><a href="#命令介绍" class="headerlink" title="命令介绍"></a>命令介绍</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">$ docker --<span class="built_in">help</span></span><br><span class="line"></span><br><span class="line">管理命令:</span><br><span class="line">  container   管理容器</span><br><span class="line">  image       管理镜像</span><br><span class="line">  network     管理网络</span><br><span class="line">命令：</span><br><span class="line">  attach      介入到一个正在运行的容器</span><br><span class="line">  build       根据 Dockerfile 构建一个镜像</span><br><span class="line">  commit      根据容器的更改创建一个新的镜像</span><br><span class="line">  cp          在本地文件系统与容器中复制 文件/文件夹</span><br><span class="line">  create      创建一个新容器</span><br><span class="line">  <span class="built_in">exec</span>        在容器中执行一条命令</span><br><span class="line">  images      列出镜像</span><br><span class="line">  <span class="built_in">kill</span>        杀死一个或多个正在运行的容器    </span><br><span class="line">  logs        取得容器的日志</span><br><span class="line">  pause       暂停一个或多个容器的所有进程</span><br><span class="line">  ps          列出所有容器</span><br><span class="line">  pull        拉取一个镜像或仓库到 registry</span><br><span class="line">  push        推送一个镜像或仓库到 registry</span><br><span class="line">  rename      重命名一个容器</span><br><span class="line">  restart     重新启动一个或多个容器</span><br><span class="line">  rm          删除一个或多个容器</span><br><span class="line">  rmi         删除一个或多个镜像</span><br><span class="line">  run         在一个新的容器中执行一条命令</span><br><span class="line">  search      在 Docker Hub 中搜索镜像</span><br><span class="line">  start       启动一个或多个已经停止运行的容器</span><br><span class="line">  stats       显示一个容器的实时资源占用</span><br><span class="line">  stop        停止一个或多个正在运行的容器</span><br><span class="line">  tag         为镜像创建一个新的标签</span><br><span class="line">  top         显示一个容器内的所有进程</span><br><span class="line">  unpause     恢复一个或多个容器内所有被暂停的进程</span><br></pre></td></tr></table></figure>
+<h2 id="服务管理"><a href="#服务管理" class="headerlink" title="服务管理"></a>服务管理</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">service docker start       <span class="comment"># 启动 docker 服务，守护进程</span></span><br><span class="line">service docker stop        <span class="comment"># 停止 docker 服务</span></span><br><span class="line">chkconfig docker on        <span class="comment"># 设置为开机启动</span></span><br></pre></td></tr></table></figure>
+<h2 id="镜像管理"><a href="#镜像管理" class="headerlink" title="镜像管理"></a>镜像管理</h2><p>镜像可以看做我们平时装系统的镜像，里面就是一个运行环境。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">docker pull centos:latest  <span class="comment"># 从docker.io中下载centos镜像到本地</span></span><br><span class="line">docker images              <span class="comment"># 查看已下载的镜像</span></span><br><span class="line">docker rm image_id         <span class="comment"># 删除镜像，指定镜像id</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除所有镜像</span></span><br><span class="line"><span class="comment"># none 默认为 docker.io</span></span><br><span class="line">docker rmi $(docker images | grep none | awk <span class="string">'&#123;print $3&#125;'</span> | sort -r)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 连接进行进入命令行模式，exit命令退出。</span></span><br><span class="line">docker run -t -i nginx:latest /bin/bash</span><br></pre></td></tr></table></figure>
+<h3 id="通过容器创建镜像"><a href="#通过容器创建镜像" class="headerlink" title="通过容器创建镜像"></a>通过容器创建镜像</h3><p>我们可以通过以下两种方式对镜像进行更改。</p>
+<ol>
+<li>从已经创建的容器中更新镜像，并且提交这个镜像</li>
+<li>使用 Dockerfile 指令来创建一个新的镜像</li>
+</ol>
+<p>下面通过已存在的容器创建一个新的镜像。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker commit -m=<span class="string">"First Docker"</span> -a=<span class="string">"wcjiang"</span> a6b0a6cfdacf wcjiang/nginx:v1.2.1</span><br></pre></td></tr></table></figure>
+<p>上面命令参数说明：</p>
+<ul>
+<li><code>-m</code> 提交的描述信息</li>
+<li><code>-a</code> 指定镜像作者</li>
+<li><code>a6b0a6cfdacf</code> 记住这个是容器id，不是镜像id</li>
+<li><code>wcjiang/nginx:v1.2.1</code> 创建的目标镜像名</li>
+</ul>
+<h3 id="发布自己的镜像"><a href="#发布自己的镜像" class="headerlink" title="发布自己的镜像"></a>发布自己的镜像</h3><ol>
+<li>在<a href="https://www.docker.com/" target="_blank" rel="noopener">Docker</a> 注册账户，发布的镜像都在<a href="https://cloud.docker.com/repository/list" target="_blank" rel="noopener">这个页面里</a>展示</li>
+<li>将上面做的镜像<code>nginx</code>，起个新的名字<code>nginx-test</code></li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker tag wcjiang/nginx:v1.2.1 wcjiang/nginx-test:lastest</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>登录docker</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker login</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>上传<code>nginx-test</code>镜像</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker push wcjiang/nginx-test:lastest</span><br><span class="line"><span class="comment"># The push refers to a repository [docker.io/wcjiang/nginx-test]</span></span><br><span class="line"><span class="comment"># 2f5c6a3c22e3: Mounted from wcjiang/nginx</span></span><br><span class="line"><span class="comment"># cf516324493c: Mounted from wcjiang/nginx</span></span><br><span class="line"><span class="comment"># lastest: digest: sha256:73ae804b2c60327d1269aa387cf782f664bc91da3180d10dbd49027d7adaa789 size: 736</span></span><br></pre></td></tr></table></figure>
+<h3 id="镜像中安装软件"><a href="#镜像中安装软件" class="headerlink" title="镜像中安装软件"></a>镜像中安装软件</h3><p>通常情况下，使用docker官方镜像，如 mysql镜像，默认情况下镜像中啥软件也没有，通过下面命令安装你所需要的软件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 第一次需要运行这个命令，确保源的索引是最新的</span></span><br><span class="line"><span class="comment"># 同步 /etc/apt/sources.list 和 /etc/apt/sources.list.d 中列出的源的索引</span></span><br><span class="line">apt-get update</span><br><span class="line"><span class="comment"># 做过上面更新同步之后，可以运行下面的命令了</span></span><br><span class="line">apt-get install vim</span><br></pre></td></tr></table></figure>
+<p>如果你安装了CentOS或者Ubuntu系统可以进入系统安装相关软件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 进入到centos7镜像系统</span></span><br><span class="line">docker run -i -t centos:7 /bin/bash</span><br><span class="line">yum update</span><br><span class="line">yum install vim</span><br></pre></td></tr></table></figure>
+<h2 id="容器管理"><a href="#容器管理" class="headerlink" title="容器管理"></a>容器管理</h2><p>容器就像一个类的实例</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">docker run centos <span class="built_in">echo</span> <span class="string">"hello world"</span>  <span class="comment"># 在docker容器中运行hello world!</span></span><br><span class="line">docker run centos yum install -y wget <span class="comment"># 在docker容器中，安装wget软件</span></span><br><span class="line">docker ps                           <span class="comment"># 列出包括未运行的容器</span></span><br><span class="line">docker ps -a                        <span class="comment"># 查看所有容器(包括正在运行和已停止的)</span></span><br><span class="line">docker logs my-nginx                <span class="comment"># 查看 my-nginx 容器日志</span></span><br><span class="line"></span><br><span class="line">docker run -i -t centos /bin/bash   <span class="comment"># 启动一个容器</span></span><br><span class="line">docker inspect centos     <span class="comment"># 检查运行中的镜像</span></span><br><span class="line">docker commit 8bd centos  <span class="comment"># 保存对容器的修改</span></span><br><span class="line">docker commit -m <span class="string">"n changed"</span> my-nginx my-nginx-image <span class="comment"># 使用已经存在的容器创建一个镜像</span></span><br><span class="line">docker inspect -f &#123;&#123;.State.Pid&#125;&#125; 44fc0f0582d9 <span class="comment"># 获取id为 44fc0f0582d9 的PID进程编号</span></span><br></pre></td></tr></table></figure>
+<h3 id="容器服务管理"><a href="#容器服务管理" class="headerlink" title="容器服务管理"></a>容器服务管理</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">docker run -itd --name my-nginx2 nginx <span class="comment"># 通过nginx镜像，【创建】容器名为 my-nginx2 的容器</span></span><br><span class="line">docker start my-nginx --restart=always    <span class="comment"># 【启动策略】一个已经存在的容器启动添加策略</span></span><br><span class="line">                               <span class="comment"># no - 容器不重启</span></span><br><span class="line">                               <span class="comment"># on-failure - 容器推出状态非0时重启</span></span><br><span class="line">                               <span class="comment"># always - 始终重启</span></span><br><span class="line">docker start my-nginx               <span class="comment"># 【启动】一个已经存在的容器</span></span><br><span class="line">docker restart my-nginx             <span class="comment"># 【重启】容器</span></span><br><span class="line">docker stop my-nginx                <span class="comment"># 【停止运行】一个容器</span></span><br><span class="line">docker <span class="built_in">kill</span> my-nginx                <span class="comment"># 【杀死】一个运行中的容器</span></span><br><span class="line">docker rename my-nginx new-nginx    <span class="comment"># 【重命名】容器</span></span><br><span class="line">docker rm new-nginx                 <span class="comment"># 【删除】容器</span></span><br></pre></td></tr></table></figure>
+<h3 id="进入容器"><a href="#进入容器" class="headerlink" title="进入容器"></a>进入容器</h3><ol>
+<li>创建一个守护状态的Docker容器</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -itd my-nginx /bin/bash</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>使用<code>docker ps</code>查看到该容器信息</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker ps</span><br><span class="line"><span class="comment"># CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</span></span><br><span class="line"><span class="comment"># 6bd0496da64f        nginx               "/bin/bash"         20 seconds ago      Up 18 seconds       80/tcp              high_shirley</span></span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>使用<code>docker exec</code>命令进入一个已经在运行的容器</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it 6bd0496da64f /bin/bash</span><br></pre></td></tr></table></figure>
+<p>通常有下面几种方式进入Docker的容器，推荐使用<code>exec</code>，使用<code>attach</code>一直进入失败。</p>
+<ul>
+<li>使用<code>docker attach</code></li>
+<li>使用<code>SSH</code> <a href="http://www.oschina.net/translate/why-you-dont-need-to-run-sshd-in-docker?cmp" target="_blank" rel="noopener">为什么不需要在 Docker 容器中运行 sshd</a></li>
+<li>使用<code>nsenter</code>进入Docker容器，<a href="https://github.com/jpetazzo/nsenter" target="_blank" rel="noopener">nsenter官方仓库</a></li>
+<li>使用<code>docker exec</code>，在<code>1.3.*</code>之后提供了一个新的命令<code>exec</code>用于进入容器</li>
+</ul>
+<h2 id="使用Docker实战"><a href="#使用Docker实战" class="headerlink" title="使用Docker实战"></a>使用Docker实战</h2><h3 id="部署Nginx"><a href="#部署Nginx" class="headerlink" title="部署Nginx"></a>部署Nginx</h3><p>1.在 docker hub 中查找 nginx 相关镜像。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ docker search nginx</span><br><span class="line"></span><br><span class="line"><span class="comment"># INDEX       NAME                                                             DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED</span></span><br><span class="line"><span class="comment"># docker.io   docker.io/nginx                                                  Official build of Nginx.                        7006      [OK]</span></span><br><span class="line"><span class="comment"># docker.io   docker.io/jwilder/nginx-proxy                                    Automated Nginx reverse proxy for docker c...   1137                 [OK]</span></span><br><span class="line"><span class="comment"># docker.io   docker.io/richarvey/nginx-php-fpm                                Container running Nginx + PHP-FPM capable ...   453                  [OK]</span></span><br><span class="line"><span class="comment"># docker.io   docker.io/jrcs/letsencrypt-nginx-proxy-companion                 LetsEncrypt container to use with nginx as...   230                  [OK]</span></span><br><span class="line"><span class="comment"># docker.io   docker.io/kong                                                   Open-source Microservice &amp; API Management ...   116       [OK]</span></span><br><span class="line"><span class="comment"># docker.io   docker.io/webdevops/php-nginx                                    Nginx with PHP-FPM                              90                   [OK]</span></span><br></pre></td></tr></table></figure>
+<p>2.拉取官方镜像，其中上面的非官方镜像是用户们根据自己的需要制作的镜像，方便大家的使用。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ docker pull nginx</span><br><span class="line"><span class="comment"># Using default tag: latest</span></span><br><span class="line"><span class="comment"># Trying to pull repository docker.io/library/nginx ...</span></span><br><span class="line"><span class="comment"># latest: Pulling from docker.io/library/nginx</span></span><br><span class="line"><span class="comment"># bc95e04b23c0: Pull complete</span></span><br><span class="line"><span class="comment"># 110767c6efff: Pull complete</span></span><br><span class="line"><span class="comment"># f081e0c4df75: Pull complete</span></span><br><span class="line"><span class="comment"># Digest: sha256:004ac1d5e791e705f12a1</span></span><br></pre></td></tr></table></figure>
+<p>3.利用这个镜像启动一个新的容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run --name my-nginx -d -p 8080:80 nginx</span><br><span class="line"><span class="comment"># faaed6a2d63af248961aab59713e515c76aea447</span></span><br></pre></td></tr></table></figure>
+<p>4.查看容器运行日志</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker logs my-nginx</span><br></pre></td></tr></table></figure>
+<p>启动一个更复杂Nginx的例子：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 上面的命令将本地文件中的 nginx.conf 配置文件挂载到容器，并且将要展示的静态页面也挂载到容器。</span></span><br><span class="line">docker run --name my-nginx \ </span><br><span class="line">    -v /host/path/nginx.conf:/etc/nginx/nginx.conf:ro \</span><br><span class="line">    -v /some/html:/usr/share/nginx/html:ro \</span><br><span class="line">    -p 8080:80 \</span><br><span class="line">    -d nginx</span><br></pre></td></tr></table></figure>
+<p><code>-v</code> 参数语法为 <code>-v host dir:container dir[:ro|rw]</code></p>
+<ul>
+<li>–name 为容器取一个名字</li>
+<li>-p 参数语法为 <code>-p host port:container port</code>; -p 8080:80 将主机上的8080端口绑定到容器上的80端口，因此在主机中访问8080端口时其实就是访问 nginx 容器的80端口</li>
+<li>-d 后台运行容器</li>
+</ul>
+<h3 id="部署MySQL"><a href="#部署MySQL" class="headerlink" title="部署MySQL"></a>部署MySQL</h3><p>拉取官方的镜像，标签为<code>5.7</code>，<a href="https://docs.docker.com/samples/library/mysql/#-via-docker-stack-deploy-or-docker-compose" target="_blank" rel="noopener">Docker官方资料</a>、<a href="https://dev.mysql.com/doc/refman/8.0/en/docker-mysql-more-topics.html" target="_blank" rel="noopener">MySQL 官方资料</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker pull mysql:5.7</span><br><span class="line"><span class="comment"># Trying to pull repository docker.io/library/mysql ...</span></span><br><span class="line"><span class="comment"># 5.7: Pulling from docker.io/library/mysql</span></span><br><span class="line"><span class="comment"># 85b1f47fba49: Already exists</span></span><br><span class="line"><span class="comment"># f34057997f40: Pull complete</span></span><br><span class="line"><span class="comment"># ....</span></span><br><span class="line"><span class="comment"># Digest: sha256:bfb22e93ee87c6aab6c1c9a4e70f28fa289f9ffae9fe8e173</span></span><br></pre></td></tr></table></figure>
+<p>创建目录</p>
+<ul>
+<li>data目录将映射为mysql容器配置的数据文件存放路径</li>
+<li>logs目录将映射为mysql容器的日志目录</li>
+<li>conf目录里的配置文件将映射为mysql容器的配置文件</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p ~/mysql/data ~/mysql/logs ~/mysql/conf</span><br></pre></td></tr></table></figure>
+<p>运行容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker run --name my-mysql \ </span><br><span class="line">-p 3306:3306 \ </span><br><span class="line">-v <span class="variable">$PWD</span>/conf/my.cnf:/etc/mysql/my.cnf \ </span><br><span class="line">-v <span class="variable">$PWD</span>/logs:/logs \ </span><br><span class="line">-v <span class="variable">$PWD</span>/data:/mysql_data \ </span><br><span class="line">-e MYSQL_ROOT_PASSWORD=123456 \ </span><br><span class="line">-d mysql:5.7</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>-p 3306:3306</code>：将容器的3306端口映射到主机的3306端口</li>
+<li><code>-v $PWD/conf/my.cnf:/etc/mysql/my.cnf</code>：将主机当前目录下的conf/my.cnf挂载到容器的/etc/mysql/my.cnf</li>
+<li><code>-v $PWD/logs:/logs</code>：将主机当前目录下的logs目录挂载到容器的/logs</li>
+<li><code>-v $PWD/data:/mysql_data</code>：将主机当前目录下的data目录挂载到容器的/mysql_data</li>
+<li><code>-e MYSQL_ROOT_PASSWORD=123456</code>：初始化root用户的密码</li>
+</ul>
+<h2 id="Docker私有仓库搭建"><a href="#Docker私有仓库搭建" class="headerlink" title="Docker私有仓库搭建"></a>Docker私有仓库搭建</h2><p>通过官方提供的私有仓库镜像<code>registry</code>来搭建私有仓库。通过 humpback 快速搭建轻量级的Docker容器云管理平台。</p>
+<h3 id="部署registry"><a href="#部署registry" class="headerlink" title="部署registry"></a>部署registry</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull registry:2.6.2</span><br></pre></td></tr></table></figure>
+<p>为了定制一些配置，和在 <a href="https://humpback.github.io" target="_blank" rel="noopener">humpback</a> 中使用，我们还需要提供一个定制化的配置文件（使用yml来编写配置文件），文件放在<code>/etc/docker/registry/config.yml</code>，如下：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="number">0.1</span></span><br><span class="line"><span class="attr">log:</span></span><br><span class="line"><span class="attr">  fields:</span></span><br><span class="line"><span class="attr">    service:</span> <span class="string">registry</span></span><br><span class="line"><span class="attr">storage:</span> </span><br><span class="line"><span class="attr">  cache:</span></span><br><span class="line"><span class="attr">    blobdescriptor:</span> <span class="string">inmemory</span></span><br><span class="line"><span class="attr">  filesystem:</span></span><br><span class="line"><span class="attr">    rootdirectory:</span> <span class="string">/var/lib/registry</span></span><br><span class="line"><span class="attr">http:</span></span><br><span class="line"><span class="attr">  addr:</span> <span class="string">:7000</span></span><br><span class="line"><span class="attr">  secret:</span> <span class="string">docker-registry</span></span><br><span class="line"><span class="attr">  headers:</span></span><br><span class="line"><span class="attr">    X-Content-Type-Options:</span> <span class="string">[nosniff]</span></span><br><span class="line"><span class="attr">    Access-Control-Allow-Headers:</span> <span class="string">['*']</span></span><br><span class="line"><span class="attr">    Access-Control-Allow-Origin:</span> <span class="string">['*']</span></span><br><span class="line"><span class="attr">    Access-Control-Allow-Methods:</span> <span class="string">['GET,POST,PUT,DELETE']</span></span><br><span class="line"><span class="attr">health:</span></span><br><span class="line"><span class="attr">  storagedriver:</span></span><br><span class="line"><span class="attr">    enabled:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">    interval:</span> <span class="number">10</span><span class="string">s</span></span><br><span class="line"><span class="attr">    threshold:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+<p>创建容器并运行，创建成功之后，可访问 <code>http://192.168.99.100:7000/v2/</code>，来检查仓库是否正常运行，当返回 <code>{}</code> 时，表示部署成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 7000:7000 --restart=always \</span><br><span class="line"> -v /var/lib/registry/:/var/lib/registry/ \</span><br><span class="line"> -v /etc/docker/registry/config.yml:/etc/docker/registry/config.yml \</span><br><span class="line"> --name humpback-registry \</span><br><span class="line"> registry:2.6.2</span><br></pre></td></tr></table></figure>
+<p>推送镜像到私有仓库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 从官方仓库拉取一个镜像</span></span><br><span class="line">docker pull nginx:1.13</span><br><span class="line"><span class="comment"># 为镜像 `nginx:1.13` 创建一个新标签 `192.168.99.100:7000/test-nginx:1.13`</span></span><br><span class="line">docker tag nginx:1.13 192.168.99.100:7000/<span class="built_in">test</span>-nginx:1.13</span><br><span class="line"><span class="comment"># 推送到私有仓库中</span></span><br><span class="line">docker push 192.168.99.100:7000/<span class="built_in">test</span>-nginx:1.13</span><br><span class="line"><span class="comment"># The push refers to a repository [192.168.99.100:7000/test-nginx]</span></span><br><span class="line"><span class="comment"># Get https://192.168.99.100:7000/v1/_ping: http: server gave HTTP response to HTTPS client</span></span><br></pre></td></tr></table></figure>
+<p>在推送到的时候报错误，默认是使用<code>https</code>提交，这个搭建的默认使用的是 <code>http</code>，解决方法两个：</p>
+<ol>
+<li>创建一个https映射</li>
+<li>将仓库地址加入到不安全的仓库列表中</li>
+</ol>
+<p>我们使用第二种方法，加入到不安全的仓库列表中，修改docker配置文件<code>vi /etc/docker/daemon.json</code> 添加 <code>insecure-registries</code>配置信息。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="comment">//... 其他配置项</span></span><br><span class="line">  <span class="comment">//关键配置项，将仓库将入到不安全的仓库列表中</span></span><br><span class="line">  <span class="string">"insecure-registries"</span>:[ </span><br><span class="line">    <span class="string">"192.168.99.100:7000"</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重启服务 <code>service docker restart</code>，默认情况下 push 是会报如下错误的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker push 192.168.99.100:7000/<span class="built_in">test</span>-nginx:1.13</span><br><span class="line"><span class="comment"># The push refers to a repository [192.168.99.100:7000/test-nginx]</span></span><br><span class="line"><span class="comment"># a1a53f8d99b5: Retrying in 1 second</span></span><br><span class="line"><span class="comment"># ...</span></span><br><span class="line"><span class="comment"># received unexpected HTTP status: 500 Internal Server Error</span></span><br></pre></td></tr></table></figure>
+<p>上面错误是<code>SELinux</code>强制访问控制安全系统，阻止导致的错误，通过下面方法禁用SELinux之后就可以push了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">setenforce 0  </span><br><span class="line">getenforce   </span><br><span class="line"><span class="comment"># Permissive</span></span><br></pre></td></tr></table></figure>
+<h3 id="部署Humpback"><a href="#部署Humpback" class="headerlink" title="部署Humpback"></a>部署Humpback</h3><p>首先创建放持久化数据文件夹，<code>mkdir -p /opt/app/humpback-web</code>，里面存放持久化数据文件，会存储站点管理和分组信息，启动后请妥善保存。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建放持久化数据文件夹</span></span><br><span class="line">mkdir -p /opt/app/humpback-web</span><br><span class="line"><span class="comment"># 下载humpback-web镜像到本地</span></span><br><span class="line">docker pull humpbacks/humpback-web:1.0.0</span><br><span class="line"><span class="comment"># 启动 humpback-web 容器，将容器命名为 humpback-web</span></span><br><span class="line">docker run -d --net=host --restart=always \</span><br><span class="line"> -e HUMPBACK_LISTEN_PORT=7001 \</span><br><span class="line"> -v /opt/app/humpback-web/dbFiles:/humpback-web/dbFiles \</span><br><span class="line"> --name humpback-web \</span><br><span class="line"> humpbacks/humpback-web:1.0.0</span><br></pre></td></tr></table></figure>
+<p>访问站点，打开浏览器输入：<a href="http://192.168.99.100:7001" target="_blank" rel="noopener">http://192.168.99.100:7001</a> ，默认账户：<code>admin</code> 密码：<code>123456</code></p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是Docker"><span class="toc-number">1.</span> <span class="toc-text">什么是Docker</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装"><span class="toc-number">2.</span> <span class="toc-text">安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#命令介绍"><span class="toc-number">3.</span> <span class="toc-text">命令介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#服务管理"><span class="toc-number">4.</span> <span class="toc-text">服务管理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#镜像管理"><span class="toc-number">5.</span> <span class="toc-text">镜像管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#通过容器创建镜像"><span class="toc-number">5.1.</span> <span class="toc-text">通过容器创建镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#发布自己的镜像"><span class="toc-number">5.2.</span> <span class="toc-text">发布自己的镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#镜像中安装软件"><span class="toc-number">5.3.</span> <span class="toc-text">镜像中安装软件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#容器管理"><span class="toc-number">6.</span> <span class="toc-text">容器管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#容器服务管理"><span class="toc-number">6.1.</span> <span class="toc-text">容器服务管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#进入容器"><span class="toc-number">6.2.</span> <span class="toc-text">进入容器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用Docker实战"><span class="toc-number">7.</span> <span class="toc-text">使用Docker实战</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#部署Nginx"><span class="toc-number">7.1.</span> <span class="toc-text">部署Nginx</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#部署MySQL"><span class="toc-number">7.2.</span> <span class="toc-text">部署MySQL</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Docker私有仓库搭建"><span class="toc-number">8.</span> <span class="toc-text">Docker私有仓库搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#部署registry"><span class="toc-number">8.1.</span> <span class="toc-text">部署registry</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#部署Humpback"><span class="toc-number">8.2.</span> <span class="toc-text">部署Humpback</span></a></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

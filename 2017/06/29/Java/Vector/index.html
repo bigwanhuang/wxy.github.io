@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>Vector | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>Vector</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年06月29日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p>##什么是 Vector</p>
+<p><img src="http://img.blog.csdn.net/20161021113111379" alt=""></p>
+<p>####Vector 和 ArrayList 一样，都是继承自AbstractList。它是 Stack 的父类。英文的意思是 “矢量”。</p>
+<p><img src="http://img.blog.csdn.net/20161021114436771" alt=""></p>
+<p>##Vector 成员变量<br><img src="http://img.blog.csdn.net/20161021233315132" alt=""></p>
+<p>1.底层也是个数组</p>
+<pre><code>protected Object[] elementData;
+</code></pre><p>2.数组元素个数，为啥不就叫 size 呢？奇怪</p>
+<pre><code>protected int elementCount;
+</code></pre><p>3.扩容时增长数量，允许用户自己设置。如果这个值是 0 或者 负数，扩容时会扩大 2 倍，而不是 1.5</p>
+<pre><code>protected int capacityIncrement;
+</code></pre><p>4.默认容量</p>
+<pre><code>private static final int DEFAULT_SIZE = 10;
+</code></pre><p>##Vector 的 4 种构造方法</p>
+<pre><code>//创建默认容量 10 的数组，同时增长量为 0 
+public Vector() {
+    this(DEFAULT_SIZE, 0);
+}
+
+//创建一个用户指定容量的数组，同时增长量为 0 
+public Vector(int capacity) {
+    this(capacity, 0);
+}
+
+//创建指定容量大小的数组，设置增长量。如果增长量为 非正数，扩容时会扩大两倍
+public Vector(int capacity, int capacityIncrement) {
+    if (capacity &lt; 0) {
+        throw new IllegalArgumentException(&quot;capacity &lt; 0: &quot; + capacity);
+    }
+    elementData = newElementArray(capacity);
+    elementCount = 0;
+    this.capacityIncrement = capacityIncrement;
+}
+
+//创建一个包含指定集合的数组
+public Vector(Collection&lt;? extends E&gt; c) {
+    //转成数组，赋值
+    elementData = c.toArray();
+    elementCount = elementData.length;
+
+    // c.toArray might (incorrectly) not return Object[] (see 6260652)
+    //可能有这个神奇的 bug，用 Arrays.copyOf 重新创建、复制
+    if (elementData.getClass() != Object[].class)
+        elementData = Arrays.copyOf(elementData, elementCount, Object[].class);
+}
+</code></pre><p>一个内部方法，返回一个新数组：</p>
+<pre><code>private E[] newElementArray(int size) {
+    return (E[]) new Object[size];
+}
+</code></pre><p>##Vector 的成员方法</p>
+<p>###1.先来看 JDK 7 中 Vector 的 3 种扩容方式：</p>
+<pre><code>//根据指定的容量进行扩容     
+private void grow(int newCapacity) {
+    //创建个指定容量的新数组，这里假设指定的容量比当前数组元素个数多
+    E[] newData = newElementArray(newCapacity);
+    //把当前数组复制到新创建的数组
+    System.arraycopy(elementData, 0, newData, 0, elementCount);
+    //当前数组指向新数组
+    elementData = newData;
+}
+
+//默认增长一倍的扩容
+private void growByOne() {
+    int adding = 0;
+    //扩容量 capacityIncrement 不大于 0，就增长一倍
+    if (capacityIncrement &lt;= 0) {
+        if ((adding = elementData.length) == 0) {
+            adding = 1;
+        }
+    } else {
+        //否则按扩容量走
+        adding = capacityIncrement;
+    }
+
+    //创建个新数组，大小为当前容量加上 adding
+    E[] newData = newElementArray(elementData.length + adding);
+    //复制，赋值
+    System.arraycopy(elementData, 0, newData, 0, elementCount);
+    elementData = newData;
+}
+
+//指定默认扩容数量的扩容
+private void growBy(int required) {
+    int adding = 0;
+    //扩容量 capacityIncrement 不大于 0
+    if (capacityIncrement &lt;= 0) {
+        //如果当前数组内没有元素，就按指定的数量扩容
+        if ((adding = elementData.length) == 0) {
+            adding = required;
+        }
+        //增加扩容数量到 指定的以上
+        while (adding &lt; required) {
+            adding += adding;
+        }
+    } else {
+        //扩容量大于 0 ，还是按指定的扩容数量走啊
+        adding = (required / capacityIncrement) * capacityIncrement;
+        //不过也可能出现偏差，因为是 int 做除法，所以扩容值至少是 指定扩容量的一倍以上
+        if (adding &lt; required) {
+            adding += capacityIncrement;
+        }
+    }
+    //创建，复制，赋值一条龙
+    E[] newData = newElementArray(elementData.length + adding);
+    System.arraycopy(elementData, 0, newData, 0, elementCount);
+    elementData = newData;
+}
+</code></pre><p>###2.（我能说一开始看错了，看成 JDK7 的了吗 - -）再来看JDK 8 中的扩容机制，变成一种了：</p>
+<pre><code>//扩容，传入最小容量，跟 ArrayList.grow(int) 很相似，只是扩大量不同 
+private void grow(int minCapacity) {
+    int oldCapacity = elementData.length;
+    //如果增长量 capacityIncrement 不大于 0 ，就扩容 2 倍
+    int newCapacity = oldCapacity + ((capacityIncrement &gt; 0) ?
+                                     capacityIncrement : oldCapacity);
+    if (newCapacity - minCapacity &lt; 0)
+        newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
+        newCapacity = hugeCapacity(minCapacity);
+    //
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+
+private static int hugeCapacity(int minCapacity) {
+    if (minCapacity &lt; 0) // overflow
+        throw new OutOfMemoryError();
+    return (minCapacity &gt; MAX_ARRAY_SIZE) ?
+        Integer.MAX_VALUE :
+        MAX_ARRAY_SIZE;
+}
+</code></pre><p>###3.Vector中的 5 种添加元素的方法</p>
+<pre><code>//扩容前兆，检查数量
+private void ensureCapacityHelper(int minCapacity) {
+    if (minCapacity - elementData.length &gt; 0)
+        grow(minCapacity);
+}
+
+//在指定位置插入一个元素，同步的
+public synchronized void insertElementAt(E obj, int index) {
+    modCount++;
+    if (index &gt; elementCount) {
+        throw new ArrayIndexOutOfBoundsException(index
+                                                 + &quot; &gt; &quot; + elementCount);
+    }
+    ensureCapacityHelper(elementCount + 1);
+    //扩容后就把插入点后面的元素统一后移一位
+    System.arraycopy(elementData, index, elementData, index + 1, elementCount - index);
+    //赋值
+    elementData[index] = obj;
+    elementCount++;
+}
+
+//尾部插入元素，同步的
+public synchronized void addElement(E obj) {
+    modCount++;
+    ensureCapacityHelper(elementCount + 1);
+    elementData[elementCount++] = obj;
+}
+
+public void add(int index, E element) {
+    insertElementAt(element, index);
+}
+
+//添加一个集合到尾部，同步的
+public synchronized boolean addAll(Collection&lt;? extends E&gt; c) {
+    modCount++;
+    //转成数组
+    Object[] a = c.toArray();
+    int numNew = a.length;
+    //扩容，复制到数组后面
+    ensureCapacityHelper(elementCount + numNew);
+    System.arraycopy(a, 0, elementData, elementCount, numNew);
+    elementCount += numNew;
+    return numNew != 0;
+}
+
+//添加一个结合到指定位置，同步的
+public synchronized boolean addAll(int index, Collection&lt;? extends E&gt; c) {
+    modCount++;
+    if (index &lt; 0 || index &gt; elementCount)
+        throw new ArrayIndexOutOfBoundsException(index);
+
+    Object[] a = c.toArray();
+    int numNew = a.length;
+    ensureCapacityHelper(elementCount + numNew);
+
+    //要移动多少个元素
+    int numMoved = elementCount - index;
+    if (numMoved &gt; 0)
+        //把插入位置后面的元素后移这么多位
+        System.arraycopy(elementData, index, elementData, index + numNew,
+                         numMoved);
+    //复制元素到数组中
+    System.arraycopy(a, 0, elementData, index, numNew);
+    elementCount += numNew;
+    return numNew != 0;
+}
+</code></pre><p>最后还有个 ListIterator 的添加方法</p>
+<pre><code>public void add(E e) {
+    int i = cursor;
+    synchronized (Vector.this) {
+        checkForComodification();
+        Vector.this.add(i, e);
+        expectedModCount = modCount;
+    }
+    cursor = i + 1;
+    lastRet = -1;
+}
+</code></pre><p>###4.Vector 中的 9 种删除方法</p>
+<pre><code>//删除指定位置的元素，同步的
+public synchronized void removeElementAt(int index) {
+    modCount++;
+    if (index &gt;= elementCount) {
+        throw new ArrayIndexOutOfBoundsException(index + &quot; &gt;= &quot; +
+                                                 elementCount);
+    }
+    else if (index &lt; 0) {
+        throw new ArrayIndexOutOfBoundsException(index);
+    }
+    int j = elementCount - index - 1;
+    if (j &gt; 0) {
+        //把删除位置后面的元素往前移一位
+        System.arraycopy(elementData, index + 1, elementData, index, j);
+    }
+    elementCount--;
+    //最后多余的一位置为 null
+    elementData[elementCount] = null; /* to let gc do its work */
+}
+
+//删除指定元素，同步的
+public synchronized boolean removeElement(Object obj) {
+    modCount++;
+    int i = indexOf(obj);
+    if (i &gt;= 0) {
+        removeElementAt(i);
+        return true;
+    }
+    return false;
+}
+
+E elementData(int index) {
+    return (E) elementData[index];
+}
+
+//删除指定位置的元素
+public synchronized E remove(int index) {
+    modCount++;
+    if (index &gt;= elementCount)
+        throw new ArrayIndexOutOfBoundsException(index);
+    E oldValue = elementData(index);
+
+    //找到删除该元素后，后面有多少位元素需要前移一位
+    int numMoved = elementCount - index - 1;
+    if (numMoved &gt; 0)
+        //迁移一位
+        System.arraycopy(elementData, index+1, elementData, index,
+                         numMoved);
+    //最后一位置为 null，不浪费空间
+    elementData[--elementCount] = null; // Let gc do its work
+
+    return oldValue;
+}
+
+public boolean remove(Object o) {
+    return removeElement(o);
+}
+
+//删除指定集合的所有元素，同步的
+public synchronized boolean removeAll(Collection&lt;?&gt; c) {
+    //直接调用 AbstractCollection 的 removeAll 方法，用迭代器挨个删除
+    return super.removeAll(c);
+}
+
+//删除所有元素，同步的
+public synchronized void removeAllElements() {
+    modCount++;
+    // 挨个置为空，Let gc do its work
+    for (int i = 0; i &lt; elementCount; i++)
+        elementData[i] = null;
+
+    elementCount = 0;
+}
+
+//删除指定范围的元素,同步的
+protected synchronized void removeRange(int fromIndex, int toIndex) {
+    modCount++;
+    //把结束位置以后的元素向前移动 指定数量个位置，覆盖
+    int numMoved = elementCount - toIndex;
+    System.arraycopy(elementData, toIndex, elementData, fromIndex,
+                     numMoved);
+
+    // 把多余的位置置为 null
+    int newElementCount = elementCount - (toIndex-fromIndex);
+    while (elementCount != newElementCount)
+        elementData[--elementCount] = null;
+}
+
+//排除异己，同步的
+public synchronized boolean retainAll(Collection&lt;?&gt; c) {
+    return super.retainAll(c);
+}
+
+//JDK 1.8 新增的
+public synchronized boolean removeIf(Predicate&lt;? super E&gt; filter) {
+    Objects.requireNonNull(filter);
+    // 将要删除的内容加入 removeSet
+    int removeCount = 0;
+    final int size = elementCount;
+    final BitSet removeSet = new BitSet(size);
+    final int expectedModCount = modCount;
+    for (int i=0; modCount == expectedModCount &amp;&amp; i &lt; size; i++) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+        final E element = (E) elementData[i];
+        if (filter.test(element)) {
+            removeSet.set(i);
+            removeCount++;
+        }
+    }
+    if (modCount != expectedModCount) {
+        throw new ConcurrentModificationException();
+    }
+
+    // 遍历，删除
+    final boolean anyToRemove = removeCount &gt; 0;
+    if (anyToRemove) {
+        final int newSize = size - removeCount;
+        for (int i=0, j=0; (i &lt; size) &amp;&amp; (j &lt; newSize); i++, j++) {
+            i = removeSet.nextClearBit(i);
+            elementData[j] = elementData[i];
+        }
+        for (int k=newSize; k &lt; size; k++) {
+            elementData[k] = null;  // Let gc do its work
+        }
+        elementCount = newSize;
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+
+    return anyToRemove;
+}
+</code></pre><p>写“同步的”写的手抽筋，还是统计不是同步的方法吧 - -。</p>
+<p>###5. Vector 中的修改方法</p>
+<pre><code>//修改指定位置为指定元素
+public synchronized E set(int index, E element) {
+    if (index &gt;= elementCount)
+        throw new ArrayIndexOutOfBoundsException(index);
+    //找到这个元素，直接设置新值
+    E oldValue = elementData(index);
+    elementData[index] = element;
+    return oldValue;
+}
+
+//修改指定位置为指定元素
+public synchronized void setElementAt(E obj, int index) {
+    if (index &gt;= elementCount) {
+        throw new ArrayIndexOutOfBoundsException(index + &quot; &gt;= &quot; +
+                                                 elementCount);
+    }
+    //数组就是方便，直接更新就好了
+    elementData[index] = obj;
+}
+
+//修改数组容量
+public synchronized void setSize(int newSize) {
+    modCount++;
+    //元素个数超出容量就要扩容
+    if (newSize &gt; elementCount) {
+        ensureCapacityHelper(newSize);
+    } else {
+        //新增 elementCount - newSize 个元素
+        for (int i = newSize ; i &lt; elementCount ; i++) {
+            elementData[i] = null;
+        }
+    }
+    elementCount = newSize;
+}
+
+//排序，修改顺序
+public synchronized void sort(Comparator&lt;? super E&gt; c) {
+    final int expectedModCount = modCount;
+    //用的是 Arrays.sort 
+    Arrays.sort((E[]) elementData, 0, elementCount, c);
+    if (modCount != expectedModCount) {
+        throw new ConcurrentModificationException();
+    }
+    modCount++;
+}
+
+//缩小数组容量，减少占用资源
+public synchronized void trimToSize() {
+    modCount++;
+    int oldCapacity = elementData.length;
+    if (elementCount &lt; oldCapacity) {
+        //新建个小点的数组，赋值
+        elementData = Arrays.copyOf(elementData, elementCount);
+    }
+}
+</code></pre><p>###6. Vector 中的查询</p>
+<pre><code>//查找 o 从指定位置 index 开始第一次出现的位置
+public synchronized int indexOf(Object o, int index) {
+    if (o == null) {
+        for (int i = index ; i &lt; elementCount ; i++)
+            if (elementData[i]==null)
+                return i;
+    } else {
+        for (int i = index ; i &lt; elementCount ; i++)
+            if (o.equals(elementData[i]))
+                return i;
+    }
+    return -1;
+}
+
+//查找 o 在数组中首次出现的位置
+public int indexOf(Object o) {
+    return indexOf(o, 0);
+}
+
+//是否包含 O 
+public boolean contains(Object o) {
+    return indexOf(o, 0) &gt;= 0;
+}
+
+//是否包含整个集合
+public synchronized boolean containsAll(Collection&lt;?&gt; c) {
+    //调用 AbstractCollection 的方法，使用迭代器挨个遍历查找，两重循环
+    return super.containsAll(c);
+}
+
+//第一个元素，其实提供了 get() 方法就够了
+public synchronized E firstElement() {
+    if (elementCount == 0) {
+        throw new NoSuchElementException();
+    }
+    return elementData(0);
+}
+
+//最后一个元素，其实提供了 get() 方法就够了
+public synchronized E lastElement() {
+    if (elementCount == 0) {
+        throw new NoSuchElementException();
+    }
+    return elementData(elementCount - 1);
+}
+
+public synchronized boolean isEmpty() {
+    return elementCount == 0;
+}
+
+//实际包含元素个数
+public synchronized int size() {
+    return elementCount;
+}
+
+//数组大小，&gt;= 元素个数
+public synchronized int capacity() {
+    return elementData.length;
+}
+</code></pre><p>###7. Vector 也可以转成数组</p>
+<pre><code>public synchronized Object[] toArray() {
+    return Arrays.copyOf(elementData, elementCount);
+}
+
+//跟 ArrayList 简直一样
+public synchronized &lt;T&gt; T[] toArray(T[] a) {
+    if (a.length &lt; elementCount)
+        return (T[]) Arrays.copyOf(elementData, elementCount, a.getClass());
+
+    System.arraycopy(elementData, 0, a, 0, elementCount);
+
+    if (a.length &gt; elementCount)
+        a[elementCount] = null;
+
+    return a;
+}
+</code></pre><p>###8. Vector 中的迭代器</p>
+<p>普通迭代器　Iterator:</p>
+<pre><code>public synchronized Iterator&lt;E&gt; iterator() {
+    return new Itr();
+}
+
+private class Itr implements Iterator&lt;E&gt; {
+    int cursor;       // index of next element to return
+    int lastRet = -1; // index of last element returned; -1 if no such
+    int expectedModCount = modCount;
+
+    public boolean hasNext() {
+        // 调用 next() 前的检查
+        return cursor != elementCount;
+    }
+
+    public E next() {
+        //注意了，Vector 连迭代器的方法也加了同步
+        synchronized (Vector.this) {
+            checkForComodification();
+            int i = cursor;
+            if (i &gt;= elementCount)
+                throw new NoSuchElementException();
+            cursor = i + 1;
+            return elementData(lastRet = i);
+        }
+    }
+
+    public void remove() {
+        if (lastRet == -1)
+            throw new IllegalStateException();
+        //注意了，Vector 连迭代器的方法也加了同步
+        synchronized (Vector.this) {
+            checkForComodification();
+            Vector.this.remove(lastRet);
+            expectedModCount = modCount;
+        }
+        cursor = lastRet;
+        lastRet = -1;
+    }
+
+    //大概看下这个 1.8 的方法
+    @Override
+    public void forEachRemaining(Consumer&lt;? super E&gt; action) {
+        Objects.requireNonNull(action);
+        synchronized (Vector.this) {
+            final int size = elementCount;
+            int i = cursor;
+            if (i &gt;= size) {
+                return;
+            }
+    @SuppressWarnings(&quot;unchecked&quot;)
+            final E[] elementData = (E[]) Vector.this.elementData;
+            if (i &gt;= elementData.length) {
+                throw new ConcurrentModificationException();
+            }
+            while (i != size &amp;&amp; modCount == expectedModCount) {
+                action.accept(elementData[i++]);
+            }
+            // update once at end of iteration to reduce heap write traffic
+            cursor = i;
+            lastRet = i - 1;
+            checkForComodification();
+        }
+    }
+
+    final void checkForComodification() {
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+    }
+}
+</code></pre><p>ListIterator:</p>
+<pre><code>public synchronized ListIterator&lt;E&gt; listIterator(int index) {
+    if (index &lt; 0 || index &gt; elementCount)
+        throw new IndexOutOfBoundsException(&quot;Index: &quot;+index);
+    return new ListItr(index);
+}
+
+final class ListItr extends Itr implements ListIterator&lt;E&gt; {
+    ListItr(int index) {
+        super();
+        cursor = index;
+    }
+
+    public boolean hasPrevious() {
+        return cursor != 0;
+    }
+
+    public int nextIndex() {
+        return cursor;
+    }
+
+    public int previousIndex() {
+        return cursor - 1;
+    }
+
+    public E previous() {
+        synchronized (Vector.this) {
+            checkForComodification();
+            int i = cursor - 1;
+            if (i &lt; 0)
+                throw new NoSuchElementException();
+            cursor = i;
+            return elementData(lastRet = i);
+        }
+    }
+
+    public void set(E e) {
+        if (lastRet == -1)
+            throw new IllegalStateException();
+        synchronized (Vector.this) {
+            checkForComodification();
+            Vector.this.set(lastRet, e);
+        }
+    }
+
+    public void add(E e) {
+        int i = cursor;
+        synchronized (Vector.this) {
+            checkForComodification();
+            Vector.this.add(i, e);
+            expectedModCount = modCount;
+        }
+        cursor = i + 1;
+        lastRet = -1;
+    }
+}
+
+//1.8 新增的略过。。。
+
+//还多了个 sort 方法，自己传入的集合需要实现比较器
+@SuppressWarnings(&quot;unchecked&quot;)
+@Override
+public synchronized void sort(Comparator&lt;? super E&gt; c) {
+    final int expectedModCount = modCount;
+    Arrays.sort((E[]) elementData, 0, elementCount, c);
+    if (modCount != expectedModCount) {
+        throw new ConcurrentModificationException();
+    }
+    modCount++;
+}
+</code></pre><p>Vector 还支持 Enumeration　迭代：</p>
+<pre><code>public Enumeration&lt;E&gt; elements() {
+    return new Enumeration&lt;E&gt;() {
+        int count = 0;
+
+        public boolean hasMoreElements() {
+            return count &lt; elementCount;
+        }
+
+        public E nextElement() {
+            synchronized (Vector.this) {
+                if (count &lt; elementCount) {
+                    return elementData(count++);
+                }
+            }
+            throw new NoSuchElementException(&quot;Vector Enumeration&quot;);
+        }
+    };
+}
+</code></pre><p>##总结</p>
+<p>###Vector 特点</p>
+<ul>
+<li>底层由一个可以增长的数组组成</li>
+<li>Vector 通过 capacity (容量) 和 capacityIncrement (增长数量) 来尽量少的占用空间</li>
+<li>扩容时默认扩大两倍</li>
+<li>最好在插入大量元素前增加 vector 容量，那样可以减少重新申请内存的次数</li>
+<li>通过 iterator 和 lastIterator 获得的迭代器是 fail-fast 的</li>
+<li>通过 elements 获得的老版迭代器 Enumeration 不是 fail-fast 的</li>
+<li>同步类，每个方法前都有同步锁 synchronized</li>
+<li>在 JDK 2.0 以后，经过优化，Vector 也加入了 Java 集合框架大家族</li>
+</ul>
+<p>###Vector VS ArrayList </p>
+<p>共同点：</p>
+<ul>
+<li>都是基于数组</li>
+<li>都支持随机访问</li>
+<li>默认容量都是 10</li>
+<li>都有扩容机制</li>
+</ul>
+<p>区别：</p>
+<ul>
+<li>Vector 出生的比较早，JDK 1.0 就出生了，ArrayList JDK 1.2 才出来</li>
+<li>Vector 比 ArrayList 多一种迭代器 Enumeration</li>
+<li>Vector 是线程安全的，ArrayList 不是</li>
+<li>Vector 默认扩容 2 倍，ArrayList 是 1.5</li>
+</ul>
+<p>如果没有线程安全的需求，一般推荐使用 ArrayList，而不是 Vector，因为每次都要获取锁，效率太低。</p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

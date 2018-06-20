@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>JDBC | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>JDBC</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年04月06日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h3 id="JDBC开发步骤"><a href="#JDBC开发步骤" class="headerlink" title="JDBC开发步骤"></a>JDBC开发步骤</h3><blockquote>
+<p>JDBC开发步骤</p>
+</blockquote>
+<ol>
+<li>注册驱动</li>
+<li>获得连接</li>
+<li>获取执行SQL语句的对象</li>
+<li>执行SQL语句</li>
+<li>处理结果</li>
+<li>释放资源</li>
+</ol>
+<p><strong>注意:注册驱动这块即<code>Class.forName(&quot;com.mysql.jdbc.Driver&quot;)</code>在MySQL驱动jar包驱动版本为5.1以上后也是可以省略的,但是jar包版本为5.0及其以下必须要手动声明,因此为了更好的兼容性,建议在开发过程中还是将<code>Class.forName(&quot;com.mysql.jdbc.Driver&quot;)</code> 加上.</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">代码实现:</span><br><span class="line"><span class="keyword">package</span> com.itheima;</span><br><span class="line"><span class="keyword">import</span> java.sql.*;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Jdbc_Base</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Connection connection = <span class="keyword">null</span>;</span><br><span class="line">        PreparedStatement statement = <span class="keyword">null</span>;</span><br><span class="line">        ResultSet resultSet = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//1.注册驱动</span></span><br><span class="line">            Class.forName(<span class="string">"com.mysql.jdbc.Driver"</span>);</span><br><span class="line">            <span class="comment">//2.获取连接</span></span><br><span class="line">            String url = <span class="string">"jdbc:mysql://localhost:3306/test1"</span>;</span><br><span class="line">            String username = <span class="string">"root"</span>;</span><br><span class="line">            String password = <span class="string">"123"</span>;</span><br><span class="line">            connection = DriverManager.getConnection(url, username, password);</span><br><span class="line">          	System.out.println(<span class="string">"Connection接口在此处的实际实现类为:"</span>+connection.getClass().getName());</span><br><span class="line">            <span class="comment">//3.获取执行SQL语句的对象</span></span><br><span class="line">            String sql = <span class="string">"SELECT * FROM user"</span>;</span><br><span class="line">            statement = connection.prepareStatement(sql);</span><br><span class="line">            <span class="comment">//4.执行SQL语句</span></span><br><span class="line">            resultSet = statement.executeQuery();</span><br><span class="line">            <span class="comment">//5.处理结果</span></span><br><span class="line">            <span class="keyword">while</span> (resultSet.next()) &#123;</span><br><span class="line">                Object username1 = resultSet.getObject(<span class="string">"username"</span>);</span><br><span class="line">                Object password1 = resultSet.getObject(<span class="string">"password"</span>);</span><br><span class="line">                System.out.println(username1+<span class="string">":"</span>+password1);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">//6.关闭资源</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                resultSet.close();</span><br><span class="line">                statement.close();</span><br><span class="line">                connection.close();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Connection接口"><a href="#Connection接口" class="headerlink" title="Connection接口"></a>Connection接口</h3><ul>
+<li>思考:在上面的代码中<code>DriverManager.getConnection()</code> 的返回值是用<code>java.sql.Connection</code>这个接口接收的,因此此处肯定用到了多态,可以确定返回的对象肯定是实现了Connection接口的,那么这个返回的对象到底是谁呢?<ul>
+<li>答:若你不清楚,可以将上述代码复制一份到开发工具中进行运行,然后控制台会输出如下一句话:<code>Connection接口在此处的实际实现类为:com.mysql.jdbc.JDBC4Connection</code> 查看代码不难发现这句话得输出是<code>System.out.println(&quot;Connection接口在此处的实际实现类为:&quot;+connection.getClass().getName());</code> 控制的,由此可以看出Connection接口的实际实现类为<code>com.mysql.jdbc.JDBC4Connection</code> 根据类的全限定类名可以看出该类是在MySQL的驱动包中实现的.</li>
+</ul>
+</li>
+<li>接着上面的思考题接着思考:<code>java.sql.Connection connection = DriverManager.getConnection()</code> 接收返回值的时候并不是采用一个实际类的类型进行接收的,而是采用接口进行接收的,这样子做有什么意义或者好处呢?<ul>
+<li>答:请你思考这样一个场景,公司一开始做项目的时候是把数据存储在了MySQL数据库中,但是后来由于业务需要,要将数据迁移到Oracle数据库中,MySQL数据库弃置,那么,若是在此处开发的时候若是采用一个具体实现类来接收<code>DriverManager.getConnection()</code> 返回的对象的话,由于这个实际类存在于mysql-connector-java-bin.jar包中,开发者肯定要在当前类里导入该包,现在业务变更,那么开发者不得不重新重新打开当前页面重新进行导包操作….</li>
+</ul>
+</li>
+<li>综合思考: JAVA中定义JDBC接口规范的重要性及其意义到底在哪里?<ul>
+<li>若Java没有定义一套JDBC接口规范,那么诸如Oracle,MySQL,SQLserver等等数据库厂商在提供操作数据驱动的时候由于没有一个官方的统一文档,它们就会按照自己的想法去定义类名,定义方法名,定义它们自己的一套实现逻辑….当开发人员要进行数据库操作的时候,不得不记忆好几套开发逻辑,好多种方法….若是项目后期要进行数据库的更改,由于各个数据库厂商所定义的方法名都不相同,开发人员便不得不大段大段的修改代码…有了JDBC接口规范后,所有的数据库厂商全部实现接口规范,按照一套开发逻辑走,只要在实现具体功能的时候提供自家的方案就可以了,对于开发人员来讲,不用管每个数据库厂商是如何实现<code>getConnection()</code>方法,如何实现<code>connection.prepareStatement(sql);</code> 的,只需要按照JDBC的规范就可以很方便的操作多种数据库了.深入想下就会发现:多态这个特性在Java语言中是多么的重要~</li>
+</ul>
+</li>
+</ul>
+<h3 id="ResultSet接口"><a href="#ResultSet接口" class="headerlink" title="ResultSet接口"></a>ResultSet接口</h3><ul>
+<li>思考: <code>resultset.next()</code> 的意义?<ul>
+<li>答:通过jdbc操作获取结果集resultset后，可以认为结果集即为一个数据表，对结果集进行操作，可以认为结果集中存在一个“虚拟指针”，虚拟指针起初停在数据库的第0行。此行是一个特殊行，没有数据（），当执行一次rs.next()方法，指针就会往下移动一行，当遍历完所有行后rs.next()就会返回false。</li>
+</ul>
+</li>
+<li>思考:通过resultset结果集可以获取查询的数据的每一列的列名吗?可以获取查询出数据的总条数吗?如果能,应该怎么获取<ul>
+<li>答:是可以获取的,通过<code>resultset.getMetaData()</code>来获取,<code>getMetaData</code> 方法可以获取结果集对象列的个数,类型,参数. <code>metaData.getColumnCount()</code> 获取总列数,<code>metaData.getColumnName(int column)</code> 获取列名,<code>metaData.getColumnType(int column)</code> 获取每列字段的类型.</li>
+</ul>
+</li>
+</ul>
+<h3 id="JDBC事务"><a href="#JDBC事务" class="headerlink" title="JDBC事务"></a>JDBC事务</h3><ul>
+<li>确保多个对数据库的操作(比如对数据库增加一条数据,对数据库删除一条数据)在同一个事务中可以同时提交,同时回滚的注意事项<ul>
+<li>必须保证多个操作用的是同一个connection对象.</li>
+<li>必须要开启事务<code>connection.setAutoCommit(false)</code> .</li>
+</ul>
+</li>
+<li>JDBC进行事务操作的主要方法<ul>
+<li>开启事务<code>connection.setAutoCommit(false)</code></li>
+<li>提交事务<code>connection.commit()</code></li>
+<li>回滚事务<code>connection.rollback()</code></li>
+</ul>
+</li>
+<li>提问:为什么要保证多个操作使用同一个connection对象?<ul>
+<li>答:我们都知道,使用Navicat或者sqlyog(小海豚)都可以对数据库进行操作,那么Navicat或者sqlyog是什么呢?它们都是连接数据库的客户端,我们在打开这些客户端后需要输入用户名和密码,如果正确就可以连接成功并且进行数据的查询了,现在,类比于Java,我们每打开一个客户端,就等于与数据库建立了一个连接,也就等于在Java中获取了一个connection对象.也就是说一个connection对象就相当于打开了一个客户端然后和数据库建立了一条连接.现在,试想一下,若是你打开了一个sqlyog,然后开启事务,再然后插入一条数据,现在你再打开一个Navicat,然后开启事务,再然后删除一条数据,这时候,当你在sqlyog中提交事务后,Navicat中的数据会同步提交吗?答案是不会的,不相信的话,自己尝试下~~</li>
+</ul>
+</li>
+</ul>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#JDBC开发步骤"><span class="toc-number">1.</span> <span class="toc-text">JDBC开发步骤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Connection接口"><span class="toc-number">2.</span> <span class="toc-text">Connection接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ResultSet接口"><span class="toc-number">3.</span> <span class="toc-text">ResultSet接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JDBC事务"><span class="toc-number">4.</span> <span class="toc-text">JDBC事务</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

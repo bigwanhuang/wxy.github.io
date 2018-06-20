@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>AbstractMap | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>AbstractMap</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年06月04日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p><img src="http://img.blog.csdn.net/20161027110250878" alt=""></p>
+<p>##什么是 AbstractMap</p>
+<p>AbstractMap 是 Map 接口的的实现类之一，也是 HashMap, TreeMap, ConcurrentHashMap 等类的父类。</p>
+<p><img src="http://img.blog.csdn.net/20161027110129194" alt=""></p>
+<p>AbstractMap 提供了 Map 的基本实现，使得我们以后要实现一个 Map 不用从头开始，只需要继承 AbstractMap, 然后按需求实现/重写对应方法即可。</p>
+<p>AbstarctMap 中唯一的抽象方法：</p>
+<pre><code>public abstract Set&lt;Entry&lt;K,V&gt;&gt; entrySet();
+</code></pre><p>当我们要实现一个 <strong>不可变</strong>的 Map 时，只需要继承这个类，然后实现 <code>entrySet()</code> 方法，这个方法返回一个保存所有 key-value 映射的 set。 通常这个 Set 不支持 add(), remove() 方法，Set 对应的迭代器也不支持 remove() 方法。 </p>
+<p>如果想要实现一个 <strong>可变的</strong> Map,我们需要在上述操作外，重写 put() 方法，因为 默认不支持 put 操作：</p>
+<pre><code>public V put(K key, V value) {
+    throw new UnsupportedOperationException();
+}
+</code></pre><p>而且 entrySet() 返回的 Set 的迭代器，也得实现 remove() 方法，因为 AbstractMap 中的 删除相关操作都需要调用该迭代器的 remove() 方法。</p>
+<p>正如其他集合推荐的那样，比如AbstractCollection 接口 ，实现类最好提供两种构造方法：</p>
+<ul>
+<li>一种是不含参数的，返回一个空 map</li>
+<li>一种是以一个 map 为参数，返回一个和参数内容一样的 map</li>
+</ul>
+<p>##AbstractMap 的成员变量</p>
+<pre><code>transient volatile Set&lt;K&gt;        keySet;
+transient volatile Collection&lt;V&gt; values;
+</code></pre><p>有两个成员变量：</p>
+<ul>
+<li>keySet, 保存 map 中所有键的 Set</li>
+<li>values, 保存 map 中所有值的集合</li>
+</ul>
+<p>他们都是 transient, volatile, 分别表示不可序列化、并发环境下变量的修改能够保证线程可见性。</p>
+<p>需要注意的是 volatile 只能保证可见性，不能保证原子性，需要保证操作是原子性操作，才能保证使用 volatile 关键字的程序在并发时能够正确执行。</p>
+<p>##AbstractMap 的成员方法</p>
+<p>AbstractMap 中实现了许多方法，实现类会根据自己不同的要求选择性的覆盖一些。</p>
+<p>接下来根据看看 AbstractMap 中的方法。</p>
+<p>###1.添加</p>
+<pre><code>public V put(K key, V value) {
+    throw new UnsupportedOperationException();
+}
+
+public void putAll(Map&lt;? extends K, ? extends V&gt; m) {
+    for (Map.Entry&lt;? extends K, ? extends V&gt; e : m.entrySet())
+        put(e.getKey(), e.getValue());
+}
+</code></pre><p>可以看到默认是不支持添加操作的，实现类需要重写 put() 方法。</p>
+<p>###2.删除</p>
+<pre><code>public V remove(Object key) {
+    //获取保存 Map.Entry 集合的迭代器
+    Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+    Entry&lt;K,V&gt; correctEntry = null;
+    //遍历查找，当某个 Entry 的 key 和 指定 key 一致时结束
+    if (key==null) {
+        while (correctEntry==null &amp;&amp; i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            if (e.getKey()==null)
+                correctEntry = e;
+        }
+    } else {
+        while (correctEntry==null &amp;&amp; i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            if (key.equals(e.getKey()))
+                correctEntry = e;
+        }
+    }
+
+    //找到了，返回要删除的值
+    V oldValue = null;
+    if (correctEntry !=null) {
+        oldValue = correctEntry.getValue();
+        //调用迭代器的 remove 方法
+        i.remove();
+    }
+    return oldValue;
+}
+
+//调用 Set.clear() 方法清除
+public void clear() {
+    entrySet().clear();
+}
+</code></pre><p>###3.获取</p>
+<pre><code>//时间复杂度为 O(n)
+//许多实现类都重写了这个方法
+public V get(Object key) {
+    //使用 Set 迭代器进行遍历，根据 key 查找
+    Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+    if (key==null) {
+        while (i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            if (e.getKey()==null)
+                return e.getValue();
+        }
+    } else {
+        while (i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            if (key.equals(e.getKey()))
+                return e.getValue();
+        }
+    }
+    return null;
+}
+</code></pre><p>###4.查询状态</p>
+<pre><code>//是否存在指定的 key
+//时间复杂度为 O(n)
+//许多实现类都重写了这个方法
+public boolean containsKey(Object key) {
+    //还是迭代器遍历，查找 key，跟 get() 很像啊
+    Iterator&lt;Map.Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+    if (key==null) {
+        while (i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            //getKey()
+            if (e.getKey()==null)
+                return true;
+        }
+    } else {
+        while (i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            if (key.equals(e.getKey()))
+                return true;
+        }
+    }
+    return false;
+}
+
+
+//查询是否存在指定的值
+public boolean containsValue(Object value) {
+    Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+    if (value==null) {
+        while (i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            //getValue()
+            if (e.getValue()==null)
+                return true;
+        }
+    } else {
+        while (i.hasNext()) {
+            Entry&lt;K,V&gt; e = i.next();
+            if (value.equals(e.getValue()))
+                return true;
+        }
+    }
+    return false;
+}
+
+
+public int size() {
+    //使用 Set.size() 获取元素个数
+    return entrySet().size();
+}
+
+public boolean isEmpty() {
+    return size() == 0;
+}
+</code></pre><p>###5.用于比较的 equals(), hashCode()</p>
+<pre><code>//内部用来测试 SimpleEntry, SimpleImmutableEntry 是否相等的方法
+private static boolean eq(Object o1, Object o2) {
+    return o1 == null ? o2 == null : o1.equals(o2);
+}
+
+//判断指定的对象是否和当前 Map 一致
+//为什么参数不是泛型而是 对象呢
+//据说是创建这个方法时还没有泛型 - -
+public boolean equals(Object o) {
+    //引用指向同一个对象
+    if (o == this)
+        return true;
+
+    //必须是 Map 的实现类
+    if (!(o instanceof Map))
+        return false;
+    //强转为 Map
+    Map&lt;?,?&gt; m = (Map&lt;?,?&gt;) o;
+    //元素个数必须一致
+    if (m.size() != size())
+        return false;
+
+    try {
+        //还是需要一个个遍历，对比
+        Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+        while (i.hasNext()) {
+            //对比每个 Entry 的 key 和 value
+            Entry&lt;K,V&gt; e = i.next();
+            K key = e.getKey();
+            V value = e.getValue();
+            if (value == null) {
+                //对比 key, value
+                if (!(m.get(key)==null &amp;&amp; m.containsKey(key)))
+                    return false;
+            } else {
+                if (!value.equals(m.get(key)))
+                    return false;
+            }
+        }
+    } catch (ClassCastException unused) {
+        return false;
+    } catch (NullPointerException unused) {
+        return false;
+    }
+
+    return true;
+}
+
+//整个 map 的 hashCode() 
+public int hashCode() {
+    int h = 0;
+    //是所有 Entry 哈希值的和
+    Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+    while (i.hasNext())
+        h += i.next().hashCode();
+    return h;
+}
+</code></pre><p>###6.获取三个主要的视图</p>
+<p>获取所有的键:</p>
+<pre><code>public Set&lt;K&gt; keySet() {
+    //如果成员变量 keySet 为 null,创建个空的 AbstractSet
+    if (keySet == null) {
+        keySet = new AbstractSet&lt;K&gt;() {
+            public Iterator&lt;K&gt; iterator() {
+                return new Iterator&lt;K&gt;() {
+                    private Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+
+                    public boolean hasNext() {
+                        return i.hasNext();
+                    }
+
+                    public K next() {
+                        return i.next().getKey();
+                    }
+
+                    public void remove() {
+                        i.remove();
+                    }
+                };
+            }
+
+            public int size() {
+                return AbstractMap.this.size();
+            }
+
+            public boolean isEmpty() {
+                return AbstractMap.this.isEmpty();
+            }
+
+            public void clear() {
+                AbstractMap.this.clear();
+            }
+
+            public boolean contains(Object k) {
+                return AbstractMap.this.containsKey(k);
+            }
+        };
+    }
+    return keySet;
+}
+</code></pre><p>获取所有的值:</p>
+<pre><code>public Collection&lt;V&gt; values() {
+    if (values == null) {
+        //没有就创建个空的 AbstractCollection 返回
+        values = new AbstractCollection&lt;V&gt;() {
+            public Iterator&lt;V&gt; iterator() {
+                return new Iterator&lt;V&gt;() {
+                    private Iterator&lt;Entry&lt;K,V&gt;&gt; i = entrySet().iterator();
+
+                    public boolean hasNext() {
+                        return i.hasNext();
+                    }
+
+                    public V next() {
+                        return i.next().getValue();
+                    }
+
+                    public void remove() {
+                        i.remove();
+                    }
+                };
+            }
+
+            public int size() {
+                return AbstractMap.this.size();
+            }
+
+            public boolean isEmpty() {
+                return AbstractMap.this.isEmpty();
+            }
+
+            public void clear() {
+                AbstractMap.this.clear();
+            }
+
+            public boolean contains(Object v) {
+                return AbstractMap.this.containsValue(v);
+            }
+        };
+    }
+    return values;
+}
+</code></pre><p>获取所有键值对，需要子类实现：</p>
+<pre><code>public abstract Set&lt;Entry&lt;K,V&gt;&gt; entrySet();
+</code></pre><p>##AbstractMap 中的内部类</p>
+<p>正如Map 接口中有内部类 Map.Entry 一样， AbstractMap 也有两个内部类：</p>
+<ul>
+<li>SimpleImmutableEntry, 表示一个不可变的键值对</li>
+<li>SimpleEntry, 表示可变的键值对</li>
+</ul>
+<p>SimpleImmutableEntry，不可变的键值对,实现了 Map.Entry&lt;K,V&gt; 接口：</p>
+<pre><code>public static class SimpleImmutableEntry&lt;K,V&gt;
+    implements Entry&lt;K,V&gt;, java.io.Serializable
+{
+    private static final long serialVersionUID = 7138329143949025153L;
+    //key-value
+    private final K key;
+    private final V value;
+
+    //构造函数，传入 key 和 value
+    public SimpleImmutableEntry(K key, V value) {
+        this.key   = key;
+        this.value = value;
+    }
+
+    //构造函数2，传入一个 Entry，赋值给本地的 key 和 value
+    public SimpleImmutableEntry(Entry&lt;? extends K, ? extends V&gt; entry) {
+        this.key   = entry.getKey();
+        this.value = entry.getValue();
+    }
+
+    //返回 键
+    public K getKey() {
+        return key;
+    }
+
+    //返回 值
+    public V getValue() {
+        return value;
+    }
+
+    //修改值，不可修改的 Entry 默认不支持这个操作
+    public V setValue(V value) {
+        throw new UnsupportedOperationException();
+    }
+
+    //比较指定 Entry 和本地是否相等
+    //要求顺序，key-value 必须全相等
+    //只要是 Map 的实现类即可，不同实现也可以相等
+    public boolean equals(Object o) {
+        if (!(o instanceof Map.Entry))
+            return false;
+        Map.Entry&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;)o;
+        return eq(key, e.getKey()) &amp;&amp; eq(value, e.getValue());
+    }
+
+    //哈希值
+    //是键的哈希与值的哈希的 异或
+    public int hashCode() {
+        return (key   == null ? 0 :   key.hashCode()) ^
+               (value == null ? 0 : value.hashCode());
+    }
+
+    //返回一个 String
+    public String toString() {
+        return key + &quot;=&quot; + value;
+    }
+
+}
+</code></pre><p>SimpleEntry, 可变的键值对:</p>
+<pre><code>public static class SimpleEntry&lt;K,V&gt;
+    implements Entry&lt;K,V&gt;, java.io.Serializable
+{
+    private static final long serialVersionUID = -8499721149061103585L;
+
+    private final K key;
+    private V value;
+
+    public SimpleEntry(K key, V value) {
+        this.key   = key;
+        this.value = value;
+    }
+
+    public SimpleEntry(Entry&lt;? extends K, ? extends V&gt; entry) {
+        this.key   = entry.getKey();
+        this.value = entry.getValue();
+    }
+
+    public K getKey() {
+        return key;
+    }
+
+    public V getValue() {
+        return value;
+    }
+
+    //支持 修改值
+    public V setValue(V value) {
+        V oldValue = this.value;
+        this.value = value;
+        return oldValue;
+    }
+
+    public boolean equals(Object o) {
+        if (!(o instanceof Map.Entry))
+            return false;
+        Map.Entry&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;)o;
+        return eq(key, e.getKey()) &amp;&amp; eq(value, e.getValue());
+    }
+
+    public int hashCode() {
+        return (key   == null ? 0 :   key.hashCode()) ^
+               (value == null ? 0 : value.hashCode());
+    }
+
+    public String toString() {
+        return key + &quot;=&quot; + value;
+    }
+
+}
+</code></pre><p>SimpleEntry 与 SimpleImmutableEntry 唯一的区别就是支持 setValue() 操作。</p>
+<p>##总结</p>
+<p> AbstractMap 是一个基础实现类，实现了 Map 的主要方法，默认不支持修改。</p>
+<p>常用的几种 Map, 比如 HashMap, TreeMap, LinkedHashMap 都继承自它。</p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

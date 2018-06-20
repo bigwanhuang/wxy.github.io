@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>springmvc学习笔记(3)-注解的处理器映射器和适配器 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(3)-注解的处理器映射器和适配器</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月08日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="默认加载"><a href="#默认加载" class="headerlink" title="默认加载"></a>默认加载</h2><p>前端控制器从<code>\org\springframework\web\servlet\DispatcherServlet.properties</code>件中加载处理器映射器、适配器、视图解析器等组件，如果不在springmvc.xml中配置，则使用默认加载的<br>注解的处理器映射器和适配器</p>
+<h2 id="注解的处理器映射器和适配器"><a href="#注解的处理器映射器和适配器" class="headerlink" title="注解的处理器映射器和适配器"></a>注解的处理器映射器和适配器</h2><pre><code>&lt;!-- 注解的映射器 --&gt;
+    &lt;bean class=&quot;org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping&quot;/&gt;
+
+&lt;!-- 注解的适配器 --&gt;
+    &lt;bean class=&quot;org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter&quot;/&gt;
+</code></pre><p>或者</p>
+<pre><code>&lt;!-- 使用mvc:annotation-driven代替上面两个注解映射器和注解适配的配置
+ mvc:annotation-driven默认加载很多的参数绑定方法，
+ 比如json转换解析器默认加载了，如果使用mvc:annotation-driven则不用配置上面的RequestMappingHandlerMapping和RequestMappingHandlerAdapter
+ 实际开发时使用mvc:annotation-driven
+ --&gt;
+&lt;mvc:annotation-driven&gt;&lt;/mvc:annotation-driven&gt;
+</code></pre><h2 id="开发注解Handler"><a href="#开发注解Handler" class="headerlink" title="开发注解Handler"></a>开发注解Handler</h2><p>使用注解的映射器和注解的适配器。(使用注解的映射器和注解的适配器必须配对使用)</p>
+<pre><code>//使用@Controller来标识它是一个控制器
+@Controller
+public class ItemsController3 {
+
+    //商品查询列表
+    @RequestMapping(&quot;/queryItems&quot;)
+    //实现 对queryItems方法和url进行映射，一个方法对应一个url
+    //一般建议将url和方法写成一样
+    public ModelAndView queryItems() throws Exception{
+        //调用service查找数据库，查询商品列表，这里使用静态数据模拟
+        List&lt;Items&gt; itemsList = new ArrayList&lt;Items&gt;();
+
+        //向list中填充静态数据
+        Items items_1 = new Items();
+        items_1.setName(&quot;联想笔记本&quot;);
+        items_1.setPrice(6000f);
+        items_1.setDetail(&quot;ThinkPad T430 c3 联想笔记本电脑！&quot;);
+
+        Items items_2 = new Items();
+        items_2.setName(&quot;苹果手机&quot;);
+        items_2.setPrice(5000f);
+        items_2.setDetail(&quot;iphone6苹果手机！&quot;);
+
+        itemsList.add(items_1);
+        itemsList.add(items_2);
+
+        //返回ModelAndView
+        ModelAndView modelAndView = new ModelAndView();
+        //相当于request的setAttribute方法,在jsp页面中通过itemsList取数据
+        modelAndView.addObject(&quot;itemsList&quot;,itemsList);
+
+        //指定视图
+        modelAndView.setViewName(&quot;/WEB-INF/jsp/items/itemsList.jsp&quot;);
+        return modelAndView;
+    }
+}
+</code></pre><h2 id="在spring容器中加载Handler"><a href="#在spring容器中加载Handler" class="headerlink" title="在spring容器中加载Handler"></a>在spring容器中加载Handler</h2><pre><code>&lt;!-- 对于注解的Handler 可以单个配置
+    实际开发中加你使用组件扫描
+    --&gt;
+    &lt;!--  &lt;bean  class=&quot;com.iot.ssm.controller.ItemsController3&quot;/&gt; --&gt;
+    &lt;!-- 可以扫描controller、service、...
+    这里让扫描controller，指定controller的包
+     --&gt;
+    &lt;context:component-scan base-package=&quot;com.iot.ssm.controller&quot;&gt;&lt;/context:component-scan&gt;
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#默认加载"><span class="toc-number">1.</span> <span class="toc-text">默认加载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#注解的处理器映射器和适配器"><span class="toc-number">2.</span> <span class="toc-text">注解的处理器映射器和适配器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开发注解Handler"><span class="toc-number">3.</span> <span class="toc-text">开发注解Handler</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#在spring容器中加载Handler"><span class="toc-number">4.</span> <span class="toc-text">在spring容器中加载Handler</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

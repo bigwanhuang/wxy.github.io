@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>Socket | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>Socket</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年06月06日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="Socket通信的步骤-TCP"><a href="#Socket通信的步骤-TCP" class="headerlink" title="Socket通信的步骤(TCP)"></a>Socket通信的步骤(TCP)</h2><ol>
+<li>创建ServerSocket和Socket</li>
+<li>打开连接到Socket的输入/输出流</li>
+<li>按照协议对Socket进行读/写操作</li>
+<li>关闭输入输出流、关闭Socket</li>
+</ol>
+<hr>
+<p>服务器端：</p>
+<ol>
+<li>创建ServerSocket对象，绑定监听端口</li>
+<li>通过accept()方法监听客户端请求</li>
+<li>连接建立后，通过输入流读取客户端发送的请求信息</li>
+<li>通过输出流向客户端发送乡音信息</li>
+<li><p>关闭相关资源</p>
+<pre><code>/**
+ * 基于TCP协议的Socket通信，实现用户登录，服务端
+*/
+//1、创建一个服务器端Socket，即ServerSocket，指定绑定的端口，并监听此端口
+ServerSocket serverSocket =newServerSocket(10086);//1024-65535的某个端口
+//2、调用accept()方法开始监听，等待客户端的连接
+Socket socket = serverSocket.accept();
+//3、获取输入流，并读取客户端信息
+InputStream is = socket.getInputStream();
+InputStreamReader isr =newInputStreamReader(is);
+BufferedReader br =newBufferedReader(isr);
+String info =null;
+while((info=br.readLine())!=null){
+System.out.println(&quot;我是服务器，客户端说：&quot;+info)；
+}
+socket.shutdownInput();//关闭输入流
+//4、获取输出流，响应客户端的请求
+OutputStream os = socket.getOutputStream();
+PrintWriter pw = new PrintWriter(os);
+pw.write(&quot;欢迎您！&quot;);
+pw.flush();
+</code></pre></li>
+</ol>
+<pre><code>//5、关闭资源
+pw.close();
+os.close();
+br.close();
+isr.close();
+is.close();
+socket.close();
+serverSocket.close();
+</code></pre><p>客户端：</p>
+<ol>
+<li>创建Socket对象，指明需要连接的服务器的地址和端口号</li>
+<li>连接建立后，通过输出流想服务器端发送请求信息</li>
+<li>通过输入流获取服务器响应的信息</li>
+<li><p>关闭响应资源 </p>
+<pre><code>//客户端
+//1、创建客户端Socket，指定服务器地址和端口
+Socket socket =newSocket(&quot;localhost&quot;,10086);
+//2、获取输出流，向服务器端发送信息
+OutputStream os = socket.getOutputStream();//字节输出流
+PrintWriter pw =newPrintWriter(os);//将输出流包装成打印流
+pw.write(&quot;用户名：admin；密码：123&quot;);
+pw.flush();
+socket.shutdownOutput();
+//3、获取输入流，并读取服务器端的响应信息
+InputStream is = socket.getInputStream();
+BufferedReader br = new BufferedReader(new InputStreamReader(is));
+String info = null;
+while((info=br.readLine())!null){
+ System.out.println(&quot;我是客户端，服务器说：&quot;+info);
+}
+
+//4、关闭资源
+br.close();
+is.close();
+pw.close();
+os.close();
+socket.close();
+</code></pre></li>
+</ol>
+<h2 id="Socket通信的步骤-UDP"><a href="#Socket通信的步骤-UDP" class="headerlink" title="Socket通信的步骤(UDP)"></a>Socket通信的步骤(UDP)</h2><p>服务器端实现步骤</p>
+<ol>
+<li>创建DatagramSocket，指定端口号</li>
+<li>创建DatagramPacket</li>
+<li>接受客户端发送的数据信息</li>
+<li><p>读取数据</p>
+<pre><code>//服务器端，实现基于UDP的用户登录
+//1、创建服务器端DatagramSocket，指定端口
+DatagramSocket socket =new datagramSocket(10010);
+//2、创建数据报，用于接受客户端发送的数据
+byte[] data =newbyte[1024];//
+DatagramPacket packet =newDatagramPacket(data,data.length);
+//3、接受客户端发送的数据
+socket.receive(packet);//此方法在接受数据报之前会一致阻塞
+//4、读取数据
+String info =newString(data,o,data.length);
+System.out.println(&quot;我是服务器，客户端告诉我&quot;+info);
+
+//向客户端响应数据
+//1、定义客户端的地址、端口号、数据
+InetAddress address = packet.getAddress();
+int port = packet.getPort();
+byte[] data2 = &quot;欢迎您！&quot;.geyBytes();
+//2、创建数据报，包含响应的数据信息
+DatagramPacket packet2 = new DatagramPacket(data2,data2.length,address,port);
+//3、响应客户端
+socket.send(packet2);
+//4、关闭资源
+socket.close();    
+</code></pre></li>
+</ol>
+<p>客户端实现步骤</p>
+<ol>
+<li>定义发送信息</li>
+<li>创建DatagramPacket，包含将要发送的信息</li>
+<li>创建DatagramSocket</li>
+<li><p>发送数据    </p>
+<pre><code>//客户端
+//1、定义服务器的地址、端口号、数据
+InetAddress address =InetAddress.getByName(&quot;localhost&quot;);
+int port =10010;
+byte[] data =&quot;用户名：admin;密码：123&quot;.getBytes();
+//2、创建数据报，包含发送的数据信息
+DatagramPacket packet = newDatagramPacket(data,data,length,address,port);
+//3、创建DatagramSocket对象
+DatagramSocket socket =newDatagramSocket();
+//4、向服务器发送数据
+socket.send(packet);
+</code></pre></li>
+</ol>
+<pre><code>//接受服务器端响应数据
+//======================================
+//1、创建数据报，用于接受服务器端响应数据
+byte[] data2 = new byte[1024];
+DatagramPacket packet2 = new DatagramPacket(data2,data2.length);
+//2、接受服务器响应的数据
+socket.receive(packet2);
+String raply = new String(data2,0,packet2.getLenth());
+System.out.println(&quot;我是客户端，服务器说：&quot;+reply);
+//4、关闭资源
+socket.close();
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Socket通信的步骤-TCP"><span class="toc-number">1.</span> <span class="toc-text">Socket通信的步骤(TCP)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Socket通信的步骤-UDP"><span class="toc-number">2.</span> <span class="toc-text">Socket通信的步骤(UDP)</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

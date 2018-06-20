@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>springmvc学习笔记(17)-上传图片 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(17)-上传图片</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月10日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="springmvc中对多部件类型解析"><a href="#springmvc中对多部件类型解析" class="headerlink" title="springmvc中对多部件类型解析"></a>springmvc中对多部件类型解析</h2><p>在修改商品页面，添加上传商品图片功能。</p>
+<p>在页面form中提交<code>enctype=&quot;multipart/form-data&quot;</code>的数据时，需要springmvc对multipart类型的数据进行解析。</p>
+<p>在springmvc.xml中配置multipart类型解析器。</p>
+<pre><code>&lt;!-- 文件上传 --&gt;
+&lt;bean id=&quot;multipartResolver&quot;
+      class=&quot;org.springframework.web.multipart.commons.CommonsMultipartResolver&quot;&gt;
+    &lt;!-- 设置上传文件的最大尺寸为5MB --&gt;
+    &lt;property name=&quot;maxUploadSize&quot;&gt;
+        &lt;value&gt;5242880&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre><h2 id="加入上传图片的jar"><a href="#加入上传图片的jar" class="headerlink" title="加入上传图片的jar"></a>加入上传图片的jar</h2><p>添加依赖</p>
+<pre><code>&lt;!-- 文件上传 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;commons-fileupload&lt;/groupId&gt;
+    &lt;artifactId&gt;commons-fileupload&lt;/artifactId&gt;
+    &lt;version&gt;1.3.1&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre><p>依赖树</p>
+<pre><code>[INFO] \- commons-fileupload:commons-fileupload:jar:1.3.1:compile
+[INFO]    \- commons-io:commons-io:jar:2.2:compile
+</code></pre><p>可以看到，其实还间接依赖了<code>commons-io:commons-io:jar</code></p>
+<h2 id="创建图片虚拟目录存储图片"><a href="#创建图片虚拟目录存储图片" class="headerlink" title="创建图片虚拟目录存储图片"></a>创建图片虚拟目录存储图片</h2><p>直接修改tomcat的配置,在conf/server.xml文件，添加虚拟目录.</p>
+<p>注意：在图片虚拟目录中，一定将图片目录分级创建（提高i/o性能），一般我们采用按日期(年、月、日)进行分级创建。</p>
+<h2 id="上传图片代码"><a href="#上传图片代码" class="headerlink" title="上传图片代码"></a>上传图片代码</h2><ul>
+<li><p>页面</p>
+<pre><code>&lt;tr&gt;
+    &lt;td&gt;商品图片&lt;/td&gt;
+    &lt;td&gt;
+        &lt;c:if test=&quot;${items.pic !=null}&quot;&gt;
+            &lt;img src=&quot;/pic/${items.pic}&quot; width=100 height=100/&gt;
+            &lt;br/&gt;
+        &lt;/c:if&gt;
+        &lt;input type=&quot;file&quot;  name=&quot;items_pic&quot;/&gt;
+    &lt;/td&gt;
+&lt;/tr&gt;
+</code></pre></li>
+</ul>
+<ul>
+<li>controller方法</li>
+</ul>
+<p>修改：商品修改controller方法：</p>
+<pre><code>@RequestMapping(&quot;/editItemsSubmit&quot;)
+    public String editItemsSubmit(
+            Model model,
+            HttpServletRequest request,
+            Integer id,
+            @ModelAttribute(&quot;items&quot;)
+            @Validated(value = ValidGroup1.class)ItemsCustom itemsCustom,
+            BindingResult bindingResult,
+            MultipartFile items_pic
+    )throws Exception {
+
+
+
+ //原始名称
+String originalFilename = items_pic.getOriginalFilename();
+//上传图片
+if(items_pic!=null &amp;&amp; originalFilename!=null &amp;&amp; originalFilename.length()&gt;0){
+
+    //存储图片的物理路径
+    String pic_path = &quot;D:\\tmp\\&quot;;
+
+
+    //新的图片名称
+    String newFileName = UUID.randomUUID() + originalFilename.substring(originalFilename.lastIndexOf(&quot;.&quot;));
+    //新图片
+    File newFile = new File(pic_path+newFileName);
+
+    //将内存中的数据写入磁盘
+    items_pic.transferTo(newFile);
+
+    //将新图片名称写到itemsCustom中
+    itemsCustom.setPic(newFileName);
+
+}
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#springmvc中对多部件类型解析"><span class="toc-number">1.</span> <span class="toc-text">springmvc中对多部件类型解析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#加入上传图片的jar"><span class="toc-number">2.</span> <span class="toc-text">加入上传图片的jar</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建图片虚拟目录存储图片"><span class="toc-number">3.</span> <span class="toc-text">创建图片虚拟目录存储图片</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#上传图片代码"><span class="toc-number">4.</span> <span class="toc-text">上传图片代码</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

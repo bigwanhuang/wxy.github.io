@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>List | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>List</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月25日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p><img src="http://img.blog.csdn.net/20161011222645338" alt="这里写图片描述"></p>
+<hr>
+<p><img src="http://img.blog.csdn.net/20161011223313297" alt="这里写图片描述"></p>
+<p>##List 接口</p>
+<p>####一个 List 是一个元素<strong>有序</strong>的、<strong>可以重复</strong>、<strong>可以为 null</strong> 的集合（有时候我们也叫它“序列”）。</p>
+<p>####Java 集合框架中最常使用的几种 List 实现类是 ArrayList，LinkedList 和 Vector。在各种 List 中，最好的做法是以 ArrayList 作为默认选择。 当插入、删除频繁时，使用 LinkedList，Vector 总是比 ArrayList 慢，所以要尽量避免使用它，具体实现后续文章介绍。</p>
+<p>##为什么 List 中的元素 “有序”、“可以重复”呢?</p>
+<p>###首先，List 的数据结构就是一个序列，存储内容时直接在内存中开辟一块连续的空间，然后将空间地址与索引对应。</p>
+<p>###其次根据官方文档 ：</p>
+<blockquote>
+<p>The user of this interface has precise control over where in the list each element is inserted. The user can access elements by their integer index (position in the list), and search for elements in the list.</p>
+</blockquote>
+<p>###可以看到，List 接口的实现类在实现插入元素时，都会根据索引进行排列。</p>
+<p>####比如 ArrayList，本质是一个数组：</p>
+<p><img src="http://img.blog.csdn.net/20161011235305081" alt="这里写图片描述"></p>
+<h4 id="LinkedList-双向链表："><a href="#LinkedList-双向链表：" class="headerlink" title="LinkedList, 双向链表："></a>LinkedList, 双向链表：</h4><p><img src="http://img.blog.csdn.net/20161011235229018" alt="这里写图片描述"></p>
+<p>###由于 List 的元素在存储时互不干扰，没有什么依赖关系，自然<strong>可以重复</strong>（这点与 Set 有很大区别）。</p>
+<p>##List 接口定义的方法</p>
+<p>###List 中除了继承 Collection 的一些方法，还提供以下操作：</p>
+<ul>
+<li>位置相关：<code>List</code> 和 数组一样，都是从 0 开始，我们可以根据元素在 list 中的位置进行操作，比如说 <code>get</code>, <code>set</code>, <code>add</code>, <code>addAll</code>, <code>remove</code>;</li>
+<li>搜索：从 list 中查找某个对象的位置，比如 <code>indexOf</code>, <code>lastIndexOf</code>;</li>
+<li>迭代：使用Iterator的拓展版迭代器 ListIterator 进行迭代操作;</li>
+<li>范围性操作：使用 <code>subList</code> 方法对 list 进行任意范围的操作。</li>
+</ul>
+<p>###集合的操作</p>
+<ul>
+<li><code>remove(Object)</code> <ul>
+<li>用于删除 list 中头回出现的 指定对象；</li>
+</ul>
+</li>
+<li><p><code>add(E)</code>, <code>addAll(Collection&lt;? extends E&gt;)</code></p>
+<ul>
+<li><p>用于把新元素添加到 list 的尾部，下面这段语句使得 list3 等于 list1 与 list2 组合起来的内容：</p>
+<pre><code>List&lt;Type&gt; list3 = new ArrayList&lt;Type&gt;(list1);
+list3.addAll(list2);
+</code></pre></li>
+</ul>
+<p><strong>注意：</strong>上述使用了 <code>ArrayList</code> 的转换构造函数:</p>
+<p>  public ArrayList(Collection&lt;? extends E&gt; collection) {</p>
+<pre><code>if (collection == null) {
+    throw new NullPointerException(&quot;collection == null&quot;);
+}
+//转换成一个数组
+Object[] a = collection.toArray();
+if (a.getClass() != Object[].class) {
+    Object[] newArray = new Object[a.length];
+    System.arraycopy(a, 0, newArray, 0, a.length);
+    a = newArray;
+}
+//拷贝
+array = a;
+size = a.length;
+</code></pre><p>  }</p>
+</li>
+<li><p>JDK 8 及以上中提供了聚合操作，下面是一个聚合操作，把 Person list 的所有 name 聚集成一个 <code>List</code>：</p>
+</li>
+</ul>
+<pre><code>List&lt;String&gt; list = people.stream()
+.map(Person::getName)
+.collect(Collectors.toList());
+</code></pre><p>###<code>Object</code> 的 <code>equlas</code>() 方法默认和 <code>==</code> 一样，比较的是地址是否相等。</p>
+<pre><code>public boolean equals(Object o) {
+    return this == o;
+}
+</code></pre><p>因此和 Set，Map 一样，List 中如果想要根据两个对象的内容而不是地址比较是否相等时，需要重写 <code>equals()</code> 和 <code>hashCode()</code> 方法。 <code>remove()</code>, <code>contains()</code>, <code>indexOf()</code> 等等方法都需要依赖它们：</p>
+<pre><code>@Override 
+public boolean contains(Object object) {
+    Object[] a = array;
+    int s = size;
+    if (object != null) {
+        for (int i = 0; i &lt; s; i++) {
+            //需要重载 Object 默认的 equals 
+            if (object.equals(a[i])) {
+                return true;
+            }
+        }
+    } else {
+        for (int i = 0; i &lt; s; i++) {
+            if (a[i] == null) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+@Override
+ public int indexOf(Object object) {
+    Object[] a = array;
+    int s = size;
+    if (object != null) {
+        for (int i = 0; i &lt; s; i++) {
+            if (object.equals(a[i])) {
+                return i;
+            }
+        }
+    } else {
+        for (int i = 0; i &lt; s; i++) {
+            if (a[i] == null) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+</code></pre><p>两个 List 对象的所有位置上元素都一样才能相等。</p>
+<p>###位置访问，搜索</p>
+<p>基础的位置访问操作方法有：</p>
+<ul>
+<li><code>get</code>, <code>set</code>, <code>add</code>, <code>remove</code> <ul>
+<li>set, remove 方法返回的是 <strong>被覆盖</strong> 或者 <strong>被删除</strong> 的元素；</li>
+</ul>
+</li>
+<li><code>indexOf</code>, <code>lastIndexOf</code> <ul>
+<li>返回指定元素在 list 中的首次出现/最后一次出现的位置（获取 lastIndexOf 是通过倒序遍历查找）;</li>
+</ul>
+</li>
+<li><code>addAll(int,Collection)</code><ul>
+<li>在特定位置插入指定集合的所有元素。这些元素按照迭代器 Iterator 返回的先后顺序进行插入；</li>
+</ul>
+</li>
+</ul>
+<p>###下面是一个简单的 List 中的元素交换方法：</p>
+<pre><code>public static &lt;E&gt; void swap(List&lt;E&gt; a, int i, int j) {
+    E tmp = a.get(i);
+    a.set(i, a.get(j));
+    a.set(j, tmp);
+}
+</code></pre><p>不同的是它是多态的，允许任何 List 的子类使用。 Collections 中的 shuffle 就有用到和下面这种相似的交换方法：</p>
+<pre><code>public static void shuffle(List&lt;?&gt; list, Random rnd) {
+    for (int i = list.size(); i &gt; 1; i--)
+        swap(list, i - 1, rnd.nextInt(i));
+}
+</code></pre><p>这种算法使用指定的随机算法，从后往前重复的进行交换。和一些其他底层 shuffle 算法不同，这个算法更加公平（随机方法够随机的话，所有元素的被抽到的概率一样），同时够快（只要 <code>list.size() -1</code> ）次交换。</p>
+<p>###局部范围操作<br>List.subList(int fromIndex, int toIndex) 方法返回 List 在 fromIndex 与 toIndex 范围内的子集。注意是左闭右开，[fromIndex,toIndex)。</p>
+<p><strong>注意</strong>！ <code>List.subList</code> 方法并没有像我们想的那样：创建一个新的 List，然后把旧 List 的指定范围子元素拷贝进新 List，根！本！不！是！<br>subList 返回的扔是 List 原来的引用，只不过把开始位置 offset 和 size 改了下，见 List.subList() 在 AbstractList 抽象类中的实现：</p>
+<pre><code>public List&lt;E&gt; subList(int start, int end) {
+    if (start &gt;= 0 &amp;&amp; end &lt;= size()) {
+        if (start &lt;= end) {
+            if (this instanceof RandomAccess) {
+                return new SubAbstractListRandomAccess&lt;E&gt;(this, start, end);
+            }
+            return new SubAbstractList&lt;E&gt;(this, start, end);
+        }
+        throw new IllegalArgumentException();
+    }
+    throw new IndexOutOfBoundsException();
+}
+</code></pre><p>SubAbstractListRandomAccess 最终也是继承 SubAbstractList,直接看 SubAbstractList：</p>
+<pre><code> SubAbstractList(AbstractList&lt;E&gt; list, int start, int end) {
+    fullList = list;
+    modCount = fullList.modCount;
+    offset = start;
+    size = end - start;
+}
+</code></pre><p>可以看到，的确是保持原来的引用。</p>
+<p>####所以，重点来了！</p>
+<p><strong>由于 subList 持有 List 同一个引用，所以对 subList 进行的操作也会影响到原有 List</strong>，举个栗子：</p>
+<p><img src="http://img.blog.csdn.net/20161013012152926" alt="这里写图片描述"></p>
+<p>你猜运行结果是什么？</p>
+<p><img src="http://img.blog.csdn.net/20161013012320565" alt="这里写图片描述"></p>
+<p>验证了上述重点。</p>
+<p>####所以，我们可以使用 subList 对 List 进行范围操作，比如下面的代码，一句话实现了删除 shixinList 部分元素的操作：</p>
+<pre><code>shixinList.subList(fromIndex, toIndex).clear();
+</code></pre><p>还可以查找某元素在局部范围内的位置：</p>
+<pre><code>int i = list.subList(fromIndex, toIndex).indexOf(o);
+int j = list.subList(fromIndex, toIndex).lastIndexOf(o);
+</code></pre><p>##List 与 Array 区别？</p>
+<p>###List 在很多方面跟 Array 数组感觉很相似，尤其是 ArrayList，那 List 和数组究竟哪个更好呢？</p>
+<ul>
+<li>相似之处：<ul>
+<li>都可以表示一组同类型的对象</li>
+<li>都使用下标进行索引</li>
+</ul>
+</li>
+<li>不同之处：<ul>
+<li>数组可以存任何类型元素</li>
+<li>List 不可以存基本数据类型，必须要包装</li>
+<li>数组容量固定不可改变；List 容量可动态增长</li>
+<li>数组效率高; List 由于要维护额外内容，效率相对低一些  </li>
+</ul>
+</li>
+</ul>
+<p>###容量固定时优先使用数组，容纳类型更多，更高效。</p>
+<p>###在容量不确定的情景下， List 更有优势，看下 ArrayList 和 LinkedList 如何实现容量动态增长：</p>
+<p>####ArrayList 的扩容机制:</p>
+<pre><code>public boolean add(E object) {
+    Object[] a = array;
+    int s = size;
+    //当放满时，扩容
+    if (s == a.length) {
+        //MIN_CAPACITY_INCREMENT 为常量，12
+        Object[] newArray = new Object[s +
+                (s &lt; (MIN_CAPACITY_INCREMENT / 2) ?
+                 MIN_CAPACITY_INCREMENT : s &gt;&gt; 1)];
+        System.arraycopy(a, 0, newArray, 0, s);
+        array = a = newArray;
+    }
+    a[s] = object;
+    size = s + 1;
+    modCount++;
+    return true;
+}
+</code></pre><p>#####可以看到：</p>
+<ul>
+<li>当 ArrayList 的元素个数小于 6 时，容量达到最大时，元素容量会扩增 12；</li>
+<li>反之，增加 当前元素个数的一半。</li>
+</ul>
+<p>####LinkedList 的扩容机制：<br>    public boolean add(E object) {<br>        return addLastImpl(object);<br>    }</p>
+<pre><code>private boolean addLastImpl(E object) {
+    Link&lt;E&gt; oldLast = voidLink.previous;
+    Link&lt;E&gt; newLink = new Link&lt;E&gt;(object, oldLast, voidLink);
+    voidLink.previous = newLink;
+    oldLast.next = newLink;
+    size++;
+    modCount++;
+    return true;
+}
+</code></pre><p>#####可以看到，没！有！扩容机制！</p>
+<p>#####这是由于 LinedList 实际上是一个双向链表，不存在元素个数限制，使劲加就行了。</p>
+<pre><code>transient Link&lt;E&gt; voidLink;
+
+private static final class Link&lt;ET&gt; {
+    ET data;
+
+    Link&lt;ET&gt; previous, next;
+
+    Link(ET o, Link&lt;ET&gt; p, Link&lt;ET&gt; n) {
+        data = o;
+        previous = p;
+        next = n;
+    }
+}
+</code></pre><p>##List 与 Array 之间的转换</p>
+<p>###在 List 中有两个转换成 数组 的方法：</p>
+<ul>
+<li>Object[] toArray()<ul>
+<li>返回一个包含 List 中所有元素的数组；</li>
+</ul>
+</li>
+<li><t> T[] toArray(T[] array)<ul>
+<li>作用同上，不同的是当 参数 array 的长度比 List 的元素大时，会使用参数 array 保存 List 中的元素；否则会创建一个新的 数组存放 List 中的所有元素；</li>
+</ul>
+</t></li>
+</ul>
+<p>###ArrayList 中的实现：</p>
+<pre><code> public Object[] toArray() {
+    int s = size;
+    Object[] result = new Object[s];
+    //这里的 array 就是 ArrayList 的底层实现，直接拷贝
+    //System.arraycopy 是底层方法，效率很高
+    System.arraycopy(array, 0, result, 0, s);
+    return result;
+}
+
+public &lt;T&gt; T[] toArray(T[] contents) {
+    int s = size;
+    //先判断参数能不能放下这么多元素
+    if (contents.length &lt; s) {
+        //放不下就创建个新数组
+        @SuppressWarnings(&quot;unchecked&quot;) T[] newArray
+            = (T[]) Array.newInstance(contents.getClass().getComponentType(), s);
+        contents = newArray;
+    }
+    System.arraycopy(this.array, 0, contents, 0, s);
+    if (contents.length &gt; s) {
+        contents[s] = null;
+    }
+    return contents;
+}
+</code></pre><p>###LinkedList 的实现：</p>
+<pre><code>public Object[] toArray() {
+    int index = 0;
+    Object[] contents = new Object[size];
+    Link&lt;E&gt; link = voidLink.next;
+    while (link != voidLink) {
+        //挨个赋值，效率不如 ArrayList
+        contents[index++] = link.data;
+        link = link.next;
+    }
+    return contents;
+}
+
+@Override
+@SuppressWarnings(&quot;unchecked&quot;)
+public &lt;T&gt; T[] toArray(T[] contents) {
+    int index = 0;
+    if (size &gt; contents.length) {
+        Class&lt;?&gt; ct = contents.getClass().getComponentType();
+        contents = (T[]) Array.newInstance(ct, size);
+    }
+    Link&lt;E&gt; link = voidLink.next;
+    while (link != voidLink) {
+        //还是比 ArrayList 慢
+        contents[index++] = (T) link.data;
+        link = link.next;
+    }
+    if (index &lt; contents.length) {
+        contents[index] = null;
+    }
+    return contents;
+}
+</code></pre><p>###数组工具类 Arrays 提供了数组转成 List 的方法 <code>asList</code> :</p>
+<pre><code>@SafeVarargs
+public static &lt;T&gt; List&lt;T&gt; asList(T... array) {
+    return new ArrayList&lt;T&gt;(array);
+}
+</code></pre><p>使用的是 Arrays 内部创建的 ArrayList 的转换构造函数：</p>
+<pre><code>private final E[] a;
+ArrayList(E[] storage) {
+    if (storage == null) {
+        throw new NullPointerException(&quot;storage == null&quot;);
+    }
+    //直接复制
+    a = storage;
+}
+</code></pre><p>##迭代器 Iterator, ListIterator</p>
+<p>###List 继承了 Collection 的 iterator() 方法，可以获取 Iterator，使用它可以进行向后遍历。</p>
+<p>###在此基础上，List 还可以通过 listIterator(), listIterator(int location) 方法（后者指定了游标的位置）获取更强大的迭代器 ListIterator。</p>
+<p>###使用 ListIterator 可以对 List 进行向前、向后双向遍历，同时还允许进行 add, set, remove 等操作。</p>
+<p>###List 的实现类中许多方法都使用了 ListIterator，比如 List.indexOf() 方法的一种实现：</p>
+<pre><code>public int indexOf(E e) {
+    for (ListIterator&lt;E&gt; it = listIterator(); it.hasNext(); )
+        if (e == null ? it.next() == null : e.equals(it.next()))
+            return it.previousIndex();
+    // Element not found
+    return -1;
+}
+</code></pre><p>###ListIterator 提供了 add, set, remove 操作，他们都是对迭代器刚通过 next(), previous()方法迭代的元素进行操作。下面这个栗子中，List 通过结合 ListIterator 使用，可以实现一个多态的方法，对所有 List 的实现类都适用：</p>
+<pre><code>public static &lt;E&gt; void replace(List&lt;E&gt; list, E val, E newVal) {
+    for (ListIterator&lt;E&gt; it = list.listIterator(); it.hasNext(); )
+        if (val == null ? it.next() == null : val.equals(it.next()))
+            it.set(newVal);
+}
+</code></pre><p>##List 的相关算法：</p>
+<p>###集合的工具类 Collections 中包含很多 List 的相关操作算法：</p>
+<ul>
+<li>sort ，归并排序</li>
+<li>shuffle ，随机打乱</li>
+<li>reverse ，反转元素顺序</li>
+<li>swap ，交换</li>
+<li>binarySearch ，二分查找</li>
+</ul>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#LinkedList-双向链表："><span class="toc-number">1.</span> <span class="toc-text">LinkedList, 双向链表：</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

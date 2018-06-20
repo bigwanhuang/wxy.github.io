@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>锁 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>锁</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年05月16日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <p>#锁问题</p>
+<p>##MySQL锁概述</p>
+<hr>
+<p><code>MyISAM</code>存储引擎采用的是<code>表级锁</code>(table-level locking).</p>
+<p><code>MEMORY</code>存储引擎采用的是<code>表级锁</code>(table-level locking).</p>
+<p><code>BDB</code>存储引擎采用的是页面锁(page-level locking),但也支持表级锁.</p>
+<p><code>InnoDB</code>存储引擎既支持<code>行级锁</code>(row-level locking),也支持表级锁,但默认情况下是采用行级锁.</p>
+<p><strong>表级锁</strong></p>
+<p>开销小,加锁快;不会出现死锁;锁定粒度大,发生锁冲突的概率最高,并发度最低.</p>
+<p><strong>行级锁</strong></p>
+<p>开销小,加锁快;不会出现死锁;锁定粒度大,发生锁冲突的概率最高,并发度最低.</p>
+<p><strong>页面锁</strong></p>
+<p>开销和加锁时间界于表锁和行锁之间;会出现死锁;锁定粒度界于表锁和行锁之间,并发度一般.</p>
+<p>##MyISAM表锁</p>
+<hr>
+<p>MyISAM存储引擎只支持表锁.</p>
+<p>###查询表级锁争用情况</p>
+<p>通过检查<code>table_locks_waited</code>和<code>table_locks_immediate</code>状态变量来分析系统上的表锁定争夺.</p>
+<pre><code>mysql&gt; show status like &apos;table%&apos;;
++-----------------------+-------+
+| Variable_name         | Value |
++-----------------------+-------+
+| Table_locks_immediate | 2979  |
+| Table_locks_waited    | 0     |
++-----------------------+-------+
+2 rows in set (0.00 sec))
+</code></pre><p>如果<code>Table_locks_waited</code>的值比较高,则说明存在着较严重的表级锁争用情况.</p>
+<p>###MySQL表级锁的锁模式</p>
+<p>MySQL的表级锁有两种模式:表共享读锁(Table Read Lock)和表独占写锁(Table Write Lock).兼容性如下:</p>
+<p><img src="https://i.imgur.com/a7KoSNb.jpg" alt=""></p>
+<ul>
+<li>对MyISAM表的读操作,不会阻塞其他用户对同一表的读请求,但会阻塞对同一表的写请求;</li>
+<li>对MyISAM表的写操作,则会阻塞其他用户对同一表的读和写操作;</li>
+</ul>
+<p>MyISAM表的读操作与写操作之间,以及写操作之间是<code>串行</code>的.</p>
+<p><strong>MyISAM存储引擎的写阻塞例子</strong></p>
+<p>当一个线程获得对一个表的写锁后,只有持有锁的线程可以对表进行更新操作.其他线程的读、写操作都会等待,直到锁被释放为止.</p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>获得表film_text的WRITE锁定
+
+mysql&gt; lock table film_text write;
+
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session对锁定表的查询、更新、插入操作都可以执行</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1001;
++---------+-------------+
+| film_id | title       |
++---------+-------------+
+| 1001    | Update Test |
++---------+-------------+
+1 row in set (0.00 sec)
+
+mysql&gt; insert into film_text (film_id,title) values(1003,&apos;Test&apos;);
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; update film_text set title = &apos;Test&apos; where film_id = 1001;
+Query OK, 1 row affected (0.00 sec)
+
+Rows matched: 1  Changed: 1  Warnings: 0
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session对锁定表的查询被阻塞，需要等待锁被释放</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1001;
+
+等待
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>释放锁</code></p>
+<pre><code>mysql&gt; unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>等待
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session2 :</p>
+<p>  <code>获得锁,查询返回</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1001;
++---------+-------+
+| film_id | title |
++---------+-------+
+| 1001    | Test  |
++---------+-------+
+1 row in set (57.59 sec)
+</code></pre></li>
+</ul>
+<p>###如何加表锁</p>
+<ul>
+<li>MyISAM在执行查询语句(SELECT)前,会<code>自动</code>给涉及的所有表<code>加读锁</code>.</li>
+<li>在执行更新操作(UPDATE、DELETE、INSERT等)前,会自动给涉及的表加写锁.</li>
+</ul>
+<p>不需要用户干预.<code>一般不需要直接用LOCK TABLE命令给MyISAM表显式加锁</code>.</p>
+<p><strong>显示加锁模拟事务操作</strong></p>
+<p>给MyISAM表显示加锁,一般是为了在一定程度模拟事务操作,实现对某一时间点多个表的一致性读取.</p>
+<p>比如:</p>
+<p>有一个订单表orders,其中记录有各订单的总金额total,同时还有一个订单明细表order_detail,其中记录有各订单每一产品的金额小计subtotal,假设我们需要检查这两个表的金额合计是否相符,可能就需要执行如下两条SQL:</p>
+<pre><code>Select sum(total) from orders;
+Select sum(subtotal) from order_detail;
+</code></pre><p><code>如果不先给两个表加锁</code>,就可能产生错误的结果,<code>因为第一条语句执行过程中,order_detail表可能已经发生了改变</code>.正确方法如下:</p>
+<pre><code>Lock tables orders read local, order_detail read local;
+Select sum(total) from orders;
+Select sum(subtotal) from order_detail;
+Unlock tables;
+</code></pre><ul>
+<li>LOCK TABLES时加了”local”选项,作用就是在满足MyISAM表并发插入条件的情况下,允许其他用户在表尾并发插入记录.</li>
+<li>在用LOCK TABLES给表显式加表锁时,<code>必须同时取得所有涉及到表的锁</code>,并且MySQL不支持锁升级.</li>
+</ul>
+<p><strong>MyISAM表不会出现死锁(Deadlock Free)的原因</strong></p>
+<p>在执行LOCK TABLES后,只能访问显式加锁的这些表,不能访问未加锁的表;同时,如果加的是读锁,那么只能执行查询操作,而不能执行更新操作.其实,在自动加锁的情况下也基本如此,MyISAM总是一次获得SQL语句所需要的全部锁.</p>
+<p><strong>MyISAM存储引擎的读阻塞写例子</strong></p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>获得表film_text的READ锁定</code></p>
+<pre><code>mysql&gt; lock table film_text read;
+
+Query OK, 0 rows affected (0.00 sec)
+</code></pre><p>第二步:</p>
+</li>
+<li><p>session1:</p>
+<p>  <code>当前session可以查询该表记录</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1001;
+
++---------+------------------+
+| film_id | title            |
++---------+------------------+
+| 1001    | ACADEMY DINOSAUR |
++---------+------------------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session也可以查询该表的记录</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1001;
+
++---------+------------------+
+| film_id | title            |
++---------+------------------+
+| 1001    | ACADEMY DINOSAUR |
++---------+------------------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session不能查询没有锁定的表</code></p>
+<pre><code>mysql&gt; select film_id,title from film where film_id = 1001;
+
+ERROR 1100 (HY000): Table &apos;film&apos; was not locked with LOCK TABLES
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session可以查询或者更新未锁定的表</code></p>
+<pre><code>mysql&gt; select film_id,title from film where film_id = 1001;
+
++---------+---------------+
+| film_id | title         |
++---------+---------------+
+| 1001    | update record |
++---------+---------------+
+1 row in set (0.00 sec)
+
+mysql&gt; update film set title = &apos;Test&apos; where film_id = 1001;
+Query OK, 1 row affected (0.04 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session中插入或者更新锁定的表都会提示错误</code></p>
+<pre><code>mysql&gt; insert into film_text (film_id,title) values(1002,&apos;Test&apos;);
+
+ERROR 1099 (HY000): Table &apos;film_text&apos; was locked with a READ lock and can&apos;t be updated
+
+mysql&gt; update film_text set title = &apos;Test&apos; where film_id = 1001;
+
+ERROR 1099 (HY000): Table &apos;film_text&apos; was locked with a READ lock and can&apos;t be updated
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session更新锁定表会等待获得锁</code></p>
+<pre><code>mysql&gt; update film_text set title = &apos;Test&apos; where film_id = 1001;
+等待
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>释放锁</code></p>
+<pre><code>mysql&gt; unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>等待
+</code></pre></li>
+</ul>
+<p>第五步:</p>
+<ul>
+<li><p>session2:</p>
+<p>  <code>获得锁,更新操作完成</code></p>
+<pre><code>mysql&gt; update film_text set title = &apos;Test&apos; where film_id = 1001;
+
+Query OK, 1 row affected (1 min 0.71 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+</code></pre></li>
+</ul>
+<p><strong>别名锁定</strong></p>
+<p>当使用LOCK TABLES时,不仅需要一次锁定用到的所有表,而且,同一个表在SQL语句中出现多少次,就要通过与SQL语句中相同的别名锁定多少次,否则也会出错.</p>
+<ol>
+<li><p>对actor表获得读锁</p>
+<pre><code>mysql&gt; lock table actor read;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>但是通过<code>别名</code>访问会提示错误</p>
+<pre><code>mysql&gt; select a.first_name,a.last_name,b.first_name,b.last_name 
+from actor a,actor b where a.first_name = b.first_name and 
+a.first_name = &apos;Lisa&apos; and a.last_name = &apos;Tom&apos; and a.last_name &lt;&gt; b.last_name;
+ERROR 1100 (HY000): Table &apos;a&apos; was not locked with LOCK TABLES
+</code></pre></li>
+<li><p>需要对<code>别名分别锁定</code></p>
+<pre><code>mysql&gt; lock table actor as a read,actor as b read;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>按照别名的查询可以正确执行</p>
+<pre><code>mysql&gt; select a.first_name,a.last_name,b.first_name,
+b.last_name 
+from actor a,actor b 
+where a.first_name = b.first_name and a.first_name = &apos;Lisa&apos; and a.last_name = &apos;Tom&apos; and a.last_name &lt;&gt; b.last_name;
+
++------------+-----------+------------+-----------+
+| first_name | last_name | first_name | last_name |
++------------+-----------+------------+-----------+
+| Lisa       | Tom       | LISA       | MONROE    |
++------------+-----------+------------+-----------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ol>
+<p>###并发插入</p>
+<p>MyISAM存储引擎有一个系统变量<code>concurrent_insert</code>,专门用以控制其并发插入的行为,其值分别可以为0、1或2.</p>
+<ul>
+<li>当concurrent_insert设置为<code>0</code>时,不允许并发插入.</li>
+<li>当concurrent_insert设置为<code>1</code>时,如果MyISAM表中没有空洞(即表的中间没有被删除的行),MyISAM<code>允许在一个进程读表的同时,另一个进程从表尾插入记录</code>.<code>这也是MySQL的默认设置</code>.(注意是<code>读表</code>时)</li>
+<li>当concurrent_insert设置为<code>2</code>时,无论MyISAM表中有没有空洞,都允许在表尾并发插入记录.</li>
+</ul>
+<p><strong>MyISAM存储引擎的读写(INSERT)并发例子</strong></p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>获得表film_text的READ LOCAL锁定</code></p>
+<pre><code>mysql&gt; lock table film_text read local;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session不能对锁定表进行更新或者插入操作</code></p>
+<pre><code>mysql&gt; insert into film_text (film_id,title) values(1002,&apos;Test&apos;);
+
+ERROR 1099 (HY000): Table &apos;film_text&apos; was locked with a READ lock and can&apos;t be updated
+
+mysql&gt; update film_text set title = &apos;Test&apos; where film_id = 1001;
+
+ERROR 1099 (HY000): Table &apos;film_text&apos; was locked with a READ lock and can&apos;t be updated
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session可以进行插入操作,但是更新会等待</code></p>
+<pre><code>mysql&gt; insert into film_text (film_id,title) values(1002,&apos;Test&apos;);
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; update film_text set title = &apos;Update Test&apos; where film_id = 1001;
+等待
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session不能访问其他session插入的记录</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1002;
+Empty set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>释放锁</code></p>
+<pre><code>mysql&gt; unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>等待
+</code></pre></li>
+</ul>
+<p>第五步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session解锁后可以获得其他session插入的记录</code></p>
+<pre><code>mysql&gt; select film_id,title from film_text where film_id = 1002;
+
++---------+-------+
+| film_id | title |
++---------+-------+
+| 1002    | Test  |
++---------+-------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<ul>
+<li><p>session2:</p>
+<p>  <code>获得锁,更新操作完成</code></p>
+<pre><code>mysql&gt; update film_text set title = &apos;Update Test&apos; where film_id = 1001;
+
+Query OK, 1 row affected (1 min 17.75 sec)
+
+Rows matched: 1  Changed: 1  Warnings: 0
+</code></pre></li>
+</ul>
+<p>###MyISAM的锁调度</p>
+<p>MyISAM存储引擎的读锁和写锁是互斥的,读写操作是串行的.</p>
+<p><strong>读写锁调度</strong></p>
+<p><code>写进程先获得锁</code>.<code>即使读请求先到锁等待队列</code>,写请求后到,<code>写锁也会插到读锁请求之前</code>!</p>
+<p>因为MySQL认为<code>写请求一般比读请求要重要</code>.</p>
+<p><strong>MyISAM不适合有大量更新操作和查询操作</strong></p>
+<p>大量的更新操作会造成查询操作很难获得读锁,从而可能永远<code>阻塞</code>.</p>
+<p><strong>调节MyISAM调度</strong></p>
+<ul>
+<li><p>通过指定启动参数<code>low-priority-updates</code>,使MyISAM引擎默认给予读请求以优先的权利.</p>
+</li>
+<li><p>通过执行命令SET <code>LOW_PRIORITY_UPDATES=1</code>m使该连接发出的更新请求优先级降低.</p>
+</li>
+<li><p>通过指定INSERT、UPDATE、DELETE语句的<code>LOW_PRIORITY</code>属性,降低该语句的优先级.</p>
+</li>
+<li><p>系统参数<code>max_write_lock_count</code>,当一个表的读锁达到这个值后,MySQL就暂时将写请求的优先级降低,给读进程一定获得锁的机会.</p>
+</li>
+</ul>
+<p><strong>不要总想用一条SELECT语句来解决问题</strong></p>
+<p>一些需要长时间运行的查询操作,也会使写进程”饿死”(读写操作是串行的).</p>
+<p>尽量避免出现长时间运行的查询操作,看似巧妙的<code>一条SQL语句</code>,往往比较复杂,执行时间较长.</p>
+<p>通过使用中间表等措施对SQL语句做一定的”分解”,使每一步查询都能在较短时间完成,从而减少锁冲突.</p>
+<p>##InnoDB锁问题</p>
+<hr>
+<p>###事务</p>
+<p>事务是由一组SQL语句组成的逻辑处理单元.</p>
+<p>####ACID</p>
+<p>事务具有ACID属性,</p>
+<p><strong>原子性(Atomicity)</strong></p>
+<p>事务是一个原子操作单元,其对数据的修改,要么<code>全都执行</code>,要么<code>全都不执行</code>,不可能停滞在中间某个环节.</p>
+<p>事务在执行过程中发生错误,会被回滚(Rollback)到事务开始前的状态,就像这个事务从来没有执行过一样.</p>
+<p><strong>一致性(Consistent)</strong></p>
+<p>在事务开始和完成时,数据都必须保持一致状态,<code>数据库的完整性约束没有被破坏</code>.</p>
+<p><code>数据库事务不能破坏关系数据的完整性以及业务逻辑上的一致性</code>.</p>
+<p>比如表与表之间存在外键约束关系,那么你对数据库进行的修改操作就必需要满足约束条件,即如果你修改了一张表中的数据,那你还需要修改与之存在外键约束关系的其他表中对应的数据,以达到一致性.</p>
+<p><strong>隔离性(Isolation)</strong></p>
+<p>多个事务并发访问时,事务之间是隔离的,一个事务不应该影响其它事务运行效果.</p>
+<p>在并发环境中,当不同的事务同时操纵相同的数据时,每个事务都有<code>各自的完整数据空间</code>.由并发事务所做的修改必须与任何其他并发事务所做的修改隔离.事务查看数据更新时,数据所处的状态<code>要么是另一事务修改它之前的状态</code>,<code>要么是另一事务修改它之后的状态</code>,<code>事务不会查看到中间状态的数据</code>.</p>
+<p><strong>持久性(Durable)</strong></p>
+<p>在事务完成以后,该事务所对数据库所作的更改便持久的保存在数据库之中,并不会被回滚.</p>
+<p>对于数据的修改是永久性的,即使出现系统故障也能够保持.</p>
+<p>####实现ACID</p>
+<p><strong>Write Ahead logging (预写日志系统)</strong></p>
+<p>WAL日志是数据库中一种高效的日志算法.实现的是redo日志模式.</p>
+<p>对数据文件的修改(它们是表和索引的载体)必须是只能发生在这些修改已经记录了日志之后 – 也就是说,在日志记录冲刷到永久存储器之后.</p>
+<p>修改数据库时,不直接修改数据库内容,而是将修改完的数据写入日志中,并同步到磁盘上,这样对其他读进程就没有影响.如果数据库崩溃,重启扫描日志文件,然后更新到数据库中.</p>
+<pre><code>我们就不需要在每次事务提交的时候都把数据页冲刷到磁盘,因为我们知道在出现崩溃的情况下,我们可以用日志来恢复数据库:任何尚未附加到数据页的记录都将先从日志记录中重做(这叫向前滚动恢复,也叫做REDO)然后那些未提交的事务做的修改将被从数据页中删除(这叫向后滚动恢复 - UNDO).
+</code></pre><p><strong>Shadow Paging</strong></p>
+<p>当一个事务需要修改逻辑页时,系统将分配一个新的空闲页作为该逻辑页的影子页,将修改后的数据保存在影子页中,并在影子页的带外区(spare area)中保存<code>逻辑页号</code>,<code>事务的ID</code>、<code>事务的提交标识等信息</code>.</p>
+<p>提交事务或中止事务时,通过影子页的带外区中事务提交标识,就可以跟踪事务的状态.在事务的更新、中止、提交过程中,都没有写入任何日志,减少了日志的数量,因此也减少了写操作和擦出操作的次数.</p>
+<ul>
+<li>优点: 实现简单, 消除了写日志记录的开销,恢复的速度也快(不需要redo和undo).</li>
+<li>缺点: 事务提交时要输出多个块,提交的开销很大,而且以块为单位,很那引用到允许多个事务并发执行的情况.</li>
+</ul>
+<p>####并发事务处理带来的问题</p>
+<p>并发事务处理能大大增加数据库资源的利用率,提高数据库系统的事务吞吐量,从而可以支持更多的用户.</p>
+<p><strong>更新丢失(Lost Update)</strong></p>
+<p>当两个或多个事务选择同一行,然后基于最初选定的值更新该行时,由于每个事务都不知道其他事务的存在,就会发生丢失更新问题.<code>最后的更新覆盖了由其他事务所做的更新</code>.</p>
+<pre><code>两个编辑人员制作了同一文档的电子副本.每个编辑人员独立地更改其副本,然后保存更改后的副本,这样就覆盖了原始文档.最后保存其更改副本的编辑人员覆盖另一个编辑人员所做的更改.如果在一个编辑人员完成并提交事务之前,另一个编辑人员不能访问同一文件,则可避免此问题.
+</code></pre><p><strong>脏读(Dirty Reads)</strong></p>
+<p>一个事务正在对一条记录做修改,在这个事务完成并提交前,这条记录的数据就处于不一致状态;这时,另一个事务也来读取同一条记录,如果不加控制,第二个事务读取了这些”脏”数据,并据此做进一步的处理,就会产生未提交的数据依赖关系.这种现象被形象地叫做”脏读”.</p>
+<p><strong>不可重复读(Non-Repeatable Reads)</strong></p>
+<p>不可重复读的重点是<code>修改</code>.</p>
+<p>一个事务在读取某些数据后的某个时间,再次<code>读取</code>以前读过的数据,却发现其读出的数据已经发生了改变,或某些记录已经被删除了.这种现象就叫做”不可重复读”.</p>
+<p><strong>幻读(Phantom Reads)</strong></p>
+<p>幻读的重点在于<code>新增</code>或者<code>删除</code>.</p>
+<p>一个事务按相同的查询条件重新读取以前检索过的数据,却发现其他事务<code>插入</code>了满足其查询条件的新数据,这种现象就称为”幻读”.</p>
+<p>####事务隔离级别</p>
+<p>防止<code>更新丢失</code>是<code>应用的责任</code>.</p>
+<p><code>脏读</code>,<code>不可重复读</code>和<code>幻读</code>都是数据库<code>读一致性的问题</code>,必须由数据库的事务隔离机制来解决.</p>
+<p><strong>数据库实现事务隔离的方式</strong></p>
+<ol>
+<li>在读取数据前,对其加锁,阻止其他事务对数据进行修改.</li>
+<li>用加任何锁,通过一定机制生成一个数据请求时间点的一致性数据快照(Snapshot),并用这个快照来提供一定级别(语句级或事务级)的一致性读取.</li>
+</ol>
+<p><strong>MVCC</strong></p>
+<p>上述第2种方案,从用户角度看,好像是数据库可以提供统一数据的多个版本,因此这种技术叫做数据多版本并发控制(<code>M</code>ulti <code>V</code>ersion <code>C</code>oncurrency <code>C</code>ontrol),或多版本数据库.</p>
+<p><strong>总结</strong></p>
+<p>数据库的事务隔离越严格,并发副作用越小,但付出的代价也就越大,因为<code>事务隔离实质上就是使事务在一定程度上&quot;串行化&quot;进行,这显然与&quot;并发&quot;是矛盾的</code>.</p>
+<p><strong>4个事务隔离级别</strong></p>
+<p><code>SQL92</code>定义了4个事务隔离级别.</p>
+<ol>
+<li>Read Uncommitted</li>
+<li>Read committed</li>
+<li>Repeatable read</li>
+<li>Serializable</li>
+</ol>
+<p><strong>读未提交(Read Uncommitted)</strong></p>
+<ul>
+<li>读数据一致性: 最低级别,只能保证不读取物理上损坏的数据.</li>
+<li>脏读: 是</li>
+<li>不可重复读: 是</li>
+<li><p>幻读: 是</p>
+<pre><code>公司发工资,领导把5000元打到singo的账号上,但是该事务并未提交,而singo正好去查看账户,发现工资已经到账,是5000元整,非常高兴.可是不幸的是,领导发现发给singo的工资金额不对,是2000元,于是迅速回滚了事务,修改金额后,将事务提交,最后singo实际的工资只有2000元,singo空欢喜一场.
+</code></pre></li>
+</ul>
+<p>另个并发的事务:</p>
+<ul>
+<li>事务A: 领导给singo发工资</li>
+<li>事务B: singo查询工资账户</li>
+</ul>
+<p><code>事务B读取了事务A尚未提交的数据</code>,既是我们所说的脏读.</p>
+<p><code>可以读取未提交记录.此隔离级别,不会使用,忽略</code>.</p>
+<p><strong>读已提交(Read committed)</strong></p>
+<ul>
+<li>读数据一致性: 语句级.</li>
+<li>脏读: 否</li>
+<li>不可重复读: 是</li>
+<li><p>幻读: 是</p>
+<pre><code>singo拿着工资卡去消费,系统读取到卡里确实有2000元,而此时她的老婆也正好在网上转账,把singo工资卡的2000元转到另一账户,并在singo之前提交了事务,当singo扣款时,系统检查到singo的工资卡已经没有钱,扣款失败,singo十分纳闷,明明卡里有钱,为何......
+</code></pre></li>
+</ul>
+<p>上述情况就是<code>不可重复读</code>,两个并发的事务,”事务A:singo消费”、”事务B:singo的老婆网上转账”,事务A事先读取了数据,事务B紧接了更新了数据,并提交了事务,而事务A再次读取该数据时,数据已经发生了改变.</p>
+<p><code>当隔离级别设置为Read committed时,避免了脏读.但是可能会造成不可重复读</code>.</p>
+<p><em>Sql Server,Oracle数据库的默认级别就是Read Committed</em></p>
+<p><code>针对当前读,RC隔离级别保证对读取到的记录加锁(记录锁),存在幻读现象</code>.</p>
+<p><strong>可重复读(Repeatable Read)</strong></p>
+<ul>
+<li>读数据一致性: 事务级.</li>
+<li>脏读: 否</li>
+<li>不可重复读: 否</li>
+<li>幻读: 是</li>
+</ul>
+<p>可以避免<code>不可重复读</code>.</p>
+<pre><code>当singo拿着工资卡去消费时,一旦系统开始读取工资卡信息(即事务开始),singo的老婆就不可能对该记录进行修改,也就是singo的老婆不能在此时转账.
+</code></pre><p>虽然Repeatable Read避免了不可重复读,但还有可能出现<code>幻读</code>.</p>
+<pre><code>singo的老婆工作在银行部门,她时常通过银行内部系统查看singo的信用卡消费记录.有一天,她正在查询到singo当月信用卡的总消费金额(select sum(amount)from transaction where month = 本月)为80元,而singo此时正好在外面胡吃海塞后在收银台买单,消费1000元,即新增了一条1000元的消费记录(insert transaction ... ),并提交了事务,随后singo的老婆将singo当月信用卡消费的明细打印到A4纸上,却发现消费总额为1080元,singo的老婆很诧异,以为出现了幻觉,幻读就这样产生了.
+</code></pre><p><em>Mysql的默认隔离级别就是Repeatable Read</em></p>
+<p><code>RR隔离级别保证对读取到的记录加锁(记录锁),同时保证对读取的范围加锁,新的满足查询条件的记录不能够插入(间隙锁),不存在幻读现象</code>.</p>
+<p><strong>可序列化(Serializable)</strong></p>
+<ul>
+<li>读数据一致性: 最高界别,事务级.</li>
+<li>脏读: 否</li>
+<li>不可重复读: 否</li>
+<li>幻读: 否</li>
+</ul>
+<p>花费代价最高,性能很低.在该级别下,<code>事务顺序执行</code>。</p>
+<p>可以避免<code>脏读</code>,<code>不可重复读</code>,<code>幻读</code>.</p>
+<p><code>从MVCC并发控制退化为基于锁的并发控制.不区别快照读与当前读,所有的读操作均为当前读,读加读锁(S锁),写加写锁(X锁)</code>.</p>
+<p>###获取InnoDB行锁争用情况</p>
+<p>可以通过检查InnoDB_row_lock状态变量来分析系统上的行锁的争夺情况:</p>
+<pre><code>mysql&gt; show status like &apos;innodb_row_lock%&apos;;
++-------------------------------+-------+
+| Variable_name                 | Value |
++-------------------------------+-------+
+| InnoDB_row_lock_current_waits | 0     | 
+| InnoDB_row_lock_time          | 0     |
+| InnoDB_row_lock_time_avg      | 0     |
+| InnoDB_row_lock_time_max      | 0     |
+| InnoDB_row_lock_waits         | 0     |
++-------------------------------+-------+
+5 rows in set (0.01 sec)
+</code></pre><p>如果发现锁争用比较严重,如<code>InnoDB_row_lock_waits</code>和<code>InnoDB_row_lock_time_avg</code>的值比较高,还可以通过设置InnoDB Monitors来进一步观察发生锁冲突的表,数据行等,并分析锁争用的原因.</p>
+<p>具体方法如下:</p>
+<pre><code>mysql&gt; CREATE TABLE innodb_monitor(a INT) ENGINE=INNODB;
+Query OK, 0 rows affected (0.14 sec) 
+</code></pre><p>然后就可以用下面的语句来进行查看:</p>
+<pre><code>mysql&gt; Show innodb status\G;
+*************************** 1. row ***************************
+Type: InnoDB
+Name: 
+Status:
+…
+…
+------------
+TRANSACTIONS
+------------
+Trx id counter 0 117472192
+Purge done for trx&apos;s n:o &lt; 0 117472190 undo n:o &lt; 0 0
+History list length 17
+Total number of lock structs in row lock hash table 0
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 0 117472185, not started, process no 11052, 
+OS thread id 1158191456
+MySQL thread id 200610, query id 291197 localhost root
+---TRANSACTION 0 117472183, not started, process no 11052, 
+OS thread id 1158723936
+MySQL thread id 199285, query id 291199 localhost root
+Show innodb status
+…
+</code></pre><p>监视器可以通过发出下列语句来停止查看：</p>
+<pre><code>mysql&gt; DROP TABLE innodb_monitor;
+Query OK, 0 rows affected (0.05 sec)
+</code></pre><p>设置监视器后,在SHOW INNODB STATUS的显示内容中,会有详细的当前锁等待的信息,包括表名、锁类型、锁定记录的情况等,便于进行进一步的分析和问题的确定.打开监视器以后,默认情况下每15秒会向日志中记录监控的内容,如果长时间打开会导致.err文件变得非常的巨大,所以用户在确认问题原因之后,要记得删除监控表以关闭监视器,或者通过使用“–console”选项来启动服务器以关闭写日志文件.</p>
+<p>###InnoDB的行锁模式及加锁方法</p>
+<p>InnoDB实现了以下两种类型的<code>行锁</code>.</p>
+<p><strong>共享锁(S)</strong></p>
+<p>允许一个事务去读一行,<code>阻止</code>其他事务获得相同数据集的<code>排他锁</code>.</p>
+<pre><code>若事务T对数据对象A加上S锁,则其它事务只能再对A加S锁,而不能加X锁,直到T释放A上的S锁.
+</code></pre><p><strong>排他锁</strong></p>
+<p>允许<code>获得排他锁</code>的事务<code>更新数据</code>,<code>阻止</code>其他事务取得相同数据集的<code>共享读锁</code>和<code>排他锁</code>.在更新操作(INSERT、UPDATE 或 DELETE)过程中始终应用排他锁.</p>
+<pre><code>若事务T对数据对象A加上X锁,则只允许T读取和修改A,其它任何事务都不能再对A加任何类型的锁,直到T释放A上的锁.它防止任何其它事务获取资源上的锁,直到在事务的末尾将资源上的原始锁释放为止.
+</code></pre><p><strong>意向锁(Intention Locks)</strong></p>
+<p>为了允许行锁和表锁共存,实现多粒度锁机制,InnoDB还有两种内部使用的意向锁(Intention Locks),这两种意向锁都是表锁.</p>
+<p>意向锁是放置在资源层次结构的一个级别上的锁,以保护较低级别资源上的共享或排他锁.</p>
+<p>意向锁是用来提高所冲突监测性能的:</p>
+<pre><code> 假设有一个张表Student,有100万条数据,其中有三行:
+
+ Name     Age
+
+   张三    -11
+
+   李四    -13
+
+   王五    14
+
+程序员A发现数据有错误,有一些学生的年龄有负数,他连接数据库,打算把所有的负数变成正数,并且希望在修改的时候,别人不可以读取数据.此时他对两行数据加了X排他锁.
+
+ 程序员B发现有几个的姓名写错了,要修改,这时他打算给整张表加上S锁,也就是,别人可以读取数据,但是不能修改.这时数据库需要判断,这张表是否可以加S锁?如何判断呢:要看这张表中的100万行数据中有没有X锁,如果被加锁的这两行数据刚好在最后,那么要判断100万次才能得出结论:有一行加了X锁,该表不能加S锁,请等待该锁释放!显然这速度慢得多.
+
+ 假如有了意向锁,在A连接的时候,给行加上X锁的时候,对该表加上IX锁.B连接申请表的S锁之前,先看到该表有IX锁,就马上知道需要等待,而不需要去判断每一行的锁了.
+</code></pre><p><strong>意向共享锁(IS)</strong></p>
+<p>事务打算给数据行加行共享锁,<code>事务在给一个数据行加共享锁前必须先取得该表的IS锁</code>.</p>
+<p><strong>意向排他锁(IX)</strong></p>
+<p>事务打算给数据行加行排他锁,<code>事务在给一个数据行加排他锁前必须先取得该表的IX锁</code>.</p>
+<p><strong>锁兼容情况</strong></p>
+<p><img src="https://i.imgur.com/wOBtAFL.jpg" alt=""></p>
+<p>如果一个事务请求的锁模式与当前的锁兼容,InnoDB就将请求的锁授予该事务;反之,如果两者不兼容,该事务就要等待锁释放.</p>
+<p><code>意向锁是InnoDB自动加的</code>,不需用户干预.</p>
+<p>对于UPDATE、DELETE和INSERT语句,InnoDB会自动给涉及数据集<code>加排他锁(X)</code>;对于普通SELECT语句,InnoDB<code>不会加任何锁</code>；</p>
+<p>事务可以通过以下语句显示给记录集加共享锁或排他锁:</p>
+<ul>
+<li><p>共享锁(S): <code>LOCK IN SHARE MODE</code></p>
+<pre><code>SELECT * FROM table_name WHERE ... LOCK IN SHARE MODE
+</code></pre><p>  主要用在需要数据依存关系时来确认某行记录是否存在,并确保没有人对这个记录进行UPDATE或者DELETE操作.</p>
+</li>
+<li><p>排他锁(X): <code>FOR UPDATE</code></p>
+<pre><code>SELECT * FROM table_name WHERE ... FOR UPDATE
+</code></pre><p>  对于锁定行记录后需要进行更新操作的应用,应该使用SELECT…FOR UPDATE方式获得排他锁.</p>
+</li>
+</ul>
+<p><strong>InnoDB存储引擎的共享锁例子</strong></p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178;  
++----------+------------+-----------+  
+| actor_id | first_name | last_name |  
++----------+------------+-----------+  
+| 178      | LISA       | MONROE    |  
++----------+------------+-----------+  
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178;
++----------+------------+-----------+
+| actor_id | first_name | last_name |
++----------+------------+-----------+
+| 178      | LISA       | MONROE    |
++----------+------------+-----------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session对actor_id=178的记录加share mode 的共享锁</code>：</p>
+<pre><code>mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178 lock in share mode;
++----------+------------+-----------+  
+| actor_id | first_name | last_name |  
++----------+------------+-----------+    
+| 178      | LISA       | MONROE    |  
++----------+------------+-----------+  
+1 row in set (0.01 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session仍然可以查询记录，并也可以对该记录加share mode的共享锁</code>:</p>
+<pre><code>mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178 lock in share mode;
++----------+------------+-----------+  
+| actor_id | first_name | last_name |
++----------+------------+-----------+  
+| 178      | LISA       | MONROE    |
++----------+------------+-----------+
+1 row in set (0.01 sec)
+</code></pre></li>
+</ul>
+<p>第三步:  </p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session对锁定的记录进行更新操作,等待锁</code>:</p>
+<pre><code>mysql&gt; update actor set last_name = &apos;MONROE T&apos; where actor_id = 178;
+等待
+</code></pre></li>
+</ul>
+<ul>
+<li><p>session2:</p>
+<p>  <code>其他session也对该记录进行更新操作，则会导致死锁退出</code>:</p>
+<pre><code>mysql&gt; update actor set last_name = &apos;MONROE T&apos; where actor_id = 178;
+ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session1: </p>
+<pre><code>`获得锁后，可以成功更新`:
+
+    mysql&gt; update actor set last_name = &apos;MONROE T&apos; where actor_id = 178;
+Query OK, 1 row affected (17.67 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+</code></pre></li>
+</ul>
+<p><strong>InnoDB存储引擎的排他锁例子</strong></p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178;
++----------+------------+-----------+
+| actor_id | first_name | last_name |
++----------+------------+-----------+
+| 178      | LISA       | MONROE    |
++----------+------------+-----------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178;
++----------+------------+-----------+
+| actor_id | first_name | last_name |
++----------+------------+-----------+
+| 178      | LISA       | MONROE    |
++----------+------------+-----------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session对actor_id=178的记录加for update的排他锁</code></p>
+<pre><code>mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178 for update;
++----------+------------+-----------+
+| actor_id | first_name | last_name |
++----------+------------+-----------+
+| 178      | LISA       | MONROE    |
++----------+------------+-----------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session可以查询该记录，但是不能对该记录加共享锁，会等待获得锁</code></p>
+<pre><code>mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178;
++----------+------------+-----------+
+| actor_id | first_name | last_name |
++----------+------------+-----------+
+| 178      | LISA       | MONROE    |
++----------+------------+-----------+
+1 row in set (0.00 sec)
+mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178 for update;
+
+等待
+</code></pre><p>第三步:</p>
+</li>
+<li><p>session1:</p>
+<p>  <code>当前session可以对锁定的记录进行更新操作，更新后释放锁</code></p>
+<pre><code>mysql&gt; update actor set last_name = &apos;MONROE T&apos; where actor_id = 178;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+mysql&gt; commit;
+Query OK, 0 rows affected (0.01 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>其他session获得锁，得到其他session提交的记录</code></p>
+<pre><code>mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 178 for update;
++----------+------------+-----------+
+| actor_id | first_name | last_name |
++----------+------------+-----------+
+| 178      | LISA       | MONROE T  |
++----------+------------+-----------+
+1 row in set (9.59 sec)
+</code></pre></li>
+</ul>
+<p>###InnoDB行锁实现方式</p>
+<p><code>InnoDB行锁是通过给索引上的索引项加锁来实现的</code>.</p>
+<p><strong>与Oracle不同</strong></p>
+<p>Oracle是通过在数据块中对相应数据行加锁来实现的.</p>
+<p><strong>行锁的使用</strong></p>
+<p>InnoDB 只有通过<code>索引条件检索数据</code>,InnoDB才使用<code>行锁</code>,否则,InnoDB将使用<code>表锁</code>!</p>
+<p><strong>在不通过索引条件查询的时候,InnoDB确实使用的是表锁,而不是行锁</strong></p>
+<p>第一步:</p>
+<pre><code>创建表table_no_index.
+
+mysql&gt; create table tab_no_index(id int,name varchar(10)) engine=innodb;
+Query OK, 0 rows affected (0.15 sec)
+mysql&gt; insert into tab_no_index values(1,&apos;1&apos;),(2,&apos;2&apos;),(3,&apos;3&apos;),        (4,&apos;4&apos;);
+Query OK, 4 rows affected (0.00 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+</code></pre><p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select * from tab_no_index where id = 1 ;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select * from tab_no_index where id = 2 ;
++------+------+
+| id   | name |
++------+------+
+| 2    | 2    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>给一行加了排他锁</code></p>
+<pre><code>mysql&gt; select * from tab_no_index where id = 1 for update;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>求其他行的排他锁时,却出现了锁等待.原因就是在没有索引的情况下,InnoDB只能使用表锁</code></p>
+<pre><code>mysql&gt; select * from tab_no_index where id = 2 for update;
+
+等待
+</code></pre></li>
+</ul>
+<p><strong>通过索引条件查询的时候,InnoDB使用的是行锁</strong></p>
+<p>第一步:</p>
+<pre><code>创建tab_with_index表,id字段有普通索引
+
+mysql&gt; create table tab_with_index(id int,name varchar(10)) engine=innodb;
+Query OK, 0 rows affected (0.15 sec)
+mysql&gt; alter table tab_with_index add index id(id);
+Query OK, 4 rows affected (0.24 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+</code></pre><p>第二步:</p>
+<ul>
+<li>session1:</li>
+</ul>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select * from tab_with_index where id = 1 ;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre><ul>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+mysql&gt; select * from tab_with_index where id = 2 ;
++------+------+
+| id   | name |
++------+------+
+| 2    | 2    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>给一行加了排他锁</code></p>
+<pre><code>mysql&gt; select * from tab_with_index where id = 1 for update;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>使用了索引条件查询时,InnoDB就只锁定了符合条件的行</code></p>
+<pre><code>mysql&gt; select * from tab_with_index where id = 2 for update;
++------+------+
+| id   | name |
++------+------+
+| 2    | 2    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p><strong>不同的行如果使用相同的索引键,会出现锁冲突的</strong></p>
+<p>由于MySQL的行锁是针对索引加的锁,不是针对记录加的锁,所以虽然是访问不同行的记录,但是如果是使用相同的索引键,是会出现锁冲突的.</p>
+<p>第一步:</p>
+<pre><code>mysql&gt; insert into tab_with_index  values(1,&apos;4&apos;);
+Query OK, 1 row affected (0.00 sec)
+mysql&gt; select * from tab_with_index where id = 1;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
+| 1    | 4    |
++------+------+
+2 rows in set (0.00 sec)
+</code></pre><p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select * from tab_with_index where id = 1 and name = &apos;1&apos; for update;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>虽然session_2访问的是和session_1不同的记录,但是因为使用了相同的索引,所以需要等待锁</code></p>
+<pre><code>mysql&gt; select * from tab_with_index where id = 1 and name = &apos;4&apos; for update;
+
+等待
+</code></pre></li>
+</ul>
+<p><strong>表有多个索引的时候,不同的事务可以使用不同的索引锁定不同的行</strong></p>
+<p>当表有多个索引的时候,不同的事务可以使用不同的索引锁定不同的行,另外,不论是使用主键索引、唯一索引或普通索引,InnoDB都会使用行锁来对数据加锁.</p>
+<pre><code>因为其他索引会指向主键索引,如果没有主键索引则选择第一个不包含NULL的unique索引为主键索引,如果也没有这样的唯一索引,则InnoDB会选择内置6字节长的ROWID作为隐含的聚集索引(ROWID随着行记录的写入而主键递增,这个ROWID不像ORACLE的ROWID那样可引用,是隐含的
+</code></pre><p>第一步:</p>
+<p><code>增加name字段普通索引</code></p>
+<pre><code>mysql&gt; alter table tab_with_index add index name(name);
+Query OK, 5 rows affected (0.23 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+</code></pre><p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select * from tab_with_index where id = 1 for update;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
+| 1    | 4    |
++------+------+
+2 rows in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>使用name的索引访问记录,因为记录没有被索引,所以可以获得锁</code></p>
+<pre><code>mysql&gt; select * from tab_with_index 
+where name = &apos;2&apos; for update;
++------+------+
+| id   | name |
++------+------+
+| 2    | 2    |
++------+------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session2:</p>
+<p>  <code>由于访问的记录已经被session_1锁定,所以等待获得锁</code></p>
+<pre><code>mysql&gt; select * from tab_with_index where name = &apos;4&apos; for update;
+
+等待
+</code></pre></li>
+</ul>
+<p><strong>一些情况即时使用索引查询InnoDB也未必使用行锁</strong></p>
+<p>即便在条件中使用了索引字段,但是否使用索引来检索数据是由MySQL通过判断不同执行计划的代价来决定的,如果MySQL认为全表扫描效率更高,比如对一些很小的表,它就不会使用索引,这种情况下InnoDB将使用表锁,而不是行锁.</p>
+<p>取消<code>name</code>索引:</p>
+<pre><code>mysql&gt; alter table tab_no_index add index name(name);
+Query OK, 4 rows affected (8.06 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+</code></pre><p>例子一:</p>
+<p><code>不是和varchar类型(name的类型)比较,对name进行类型转换,执行全表扫描</code></p>
+<pre><code>mysql&gt; explain select * from tab_with_index where name = 1 \G
+
+*************************** 1. row ***************************
+id: 1
+  select_type: SIMPLE
+table: tab_with_index
+type: ALL
+possible_keys: name
+key: NULL
+  key_len: NULL
+ref: NULL
+rows: 4
+Extra: Using where
+1 row in set (0.00 sec)
+</code></pre><p>例子二:</p>
+<p><code>查询类型和varchar类型匹配,使用索引</code></p>
+<pre><code>mysql&gt; explain select * from tab_with_index where name = &apos;1&apos; \G
+*************************** 1. row ***************************
+id: 1
+  select_type: SIMPLE
+table: tab_with_index
+type: ref
+possible_keys: name
+key: name
+ key_len: 23
+ref: const
+rows: 1
+Extra: Using where
+1 row in set (0.00 sec)
+</code></pre><p>###间隙锁(Next-Key锁)</p>
+<p><strong>间隙(GAP)</strong></p>
+<p>当我们用范围条件而不是相等条件检索数据,并请求共享或排他锁时,InnoDB会给符合条件的已有数据记录的索引项加锁;<code>对于键值在条件范围内但并不存在的记录,叫做&quot;间隙(GAP)&quot;</code>.</p>
+<p><strong>间隙锁(Next-Key锁)</strong></p>
+<p>InnoDB也会对这个“间隙”加锁,这种锁机制就是所谓的间隙锁(Next-Key锁)</p>
+<p><strong>举例</strong></p>
+<p>假如emp表中只有101条记录,其empid的值分别是 1,2,…,100,101</p>
+<pre><code>Select * from  emp where empid &gt; 100 for update;
+</code></pre><p>是一个范围条件的检索,InnoDB不仅会对符合条件的empid值为101的记录加锁,也会对empid大于101(这些记录并不存在)的”间隙”加锁.</p>
+<p>InnoDB除了通过范围条件加锁时使用间隙锁外,如果<code>使用相等条件</code>请求给一个不存在的记录加锁,InnoDB也会使用间隙锁.</p>
+<p><strong>防止幻读</strong></p>
+<p>如果其他事务插入了empid大于100的任何记录,那么本事务如果再次执行上述语句,就会发生幻读.</p>
+<p><strong>缺点</strong></p>
+<p>InnoDB这种加锁机制会阻塞符合条件范围内键值的并发插入,这往往会造成严重的锁等待.</p>
+<p>尽量使用相等条件来访问更新数据,避免使用范围条件.</p>
+<p><strong>InnoDB存储引擎的间隙锁阻塞例子</strong></p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select @@tx_isolation;
+
++-----------------+
+| @@tx_isolation  |
++-----------------+
+| REPEATABLE-READ |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)    
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select @@tx_isolation;
+
++-----------------+
+| @@tx_isolation  |
++-----------------+
+| REPEATABLE-READ |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>当前session对不存在的记录加for update的锁</code></p>
+<pre><code>mysql&gt; select * from emp where empid = 201 for update;
+Empty set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>这时,如果其他session插入empid为201的记录(注意:这条记录并不存在),也会出现锁等待</code></p>
+<pre><code>mysql&gt;insert into emp(empid,...) values(201,...);
+
+阻塞等待
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>执行rollback</code></p>
+<pre><code>mysql&gt; rollback;
+Query OK, 0 rows affected (13.04 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>由于其他session1回退后释放了Next-Key锁,当前session2可以获得锁并成功插入记录</code></p>
+<pre><code>mysql&gt;insert into emp(empid,...) values(201,...);
+Query OK, 1 row affected (13.35 sec)
+</code></pre></li>
+</ul>
+<p>###恢复和复制的需要,对InnoDB锁机制的影响</p>
+<p>MySQL通过BINLOG录执行成功的INSERT、UPDATE、DELETE等更新数据的SQL语句,并由此实现MySQL数据库的恢复和主从复制.</p>
+<p><strong>MySQL的恢复机制</strong></p>
+<ol>
+<li>MySQL的恢复是SQL语句级的,也就是重新执行BINLOG中的SQL语句.这与Oracle数据库不同,Oracle是基于数据库文件块的.</li>
+<li>MySQL的Binlog是按照事务提交的先后顺序记录的,恢复也是按这个顺序进行的.这点也与Oralce不同,Oracle是按照系统更新号(System Change Number，SCN)来恢复数据的,每个事务开始时,Oracle都会分配一个全局唯一的SCN,SCN的顺序与事务开始的时间顺序是一致的.</li>
+</ol>
+<p><strong>CTAS操作给原表加锁例子</strong></p>
+<p>CTAS是:</p>
+<ol>
+<li>insert  into target_tab select * from source_tab where …</li>
+<li>create  table new_tab …select … From  source_tab where …</li>
+</ol>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; select * from target_tab;
+Empty set (0.00 sec)
+
+ mysql&gt; select * from source_tab where name = &apos;1&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 1    |  1 |
+|  5 | 1    |  1 |
+|  6 | 1    |  1 |
+|  7 | 1    |  1 |
+|  8 | 1    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; select * from target_tab;
+Empty set (0.00 sec)
+
+mysql&gt; select * from source_tab where name = &apos;1&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 1    |  1 |
+|  5 | 1    |  1 |
+|  6 | 1    |  1 |
+|  7 | 1    |  1 |
+|  8 | 1    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; insert into target_tab select d1,name from source_tab where name = &apos;1&apos;;
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; update source_tab set name = &apos;1&apos; where name = &apos;8&apos;;
+等待
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>commit
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>返回结果
+commit;
+</code></pre></li>
+</ul>
+<p>但这里InnoDB却给source_tab<code>加了共享锁</code>,<code>并没有使用多版本数据一致性读技术</code>.</p>
+<p>目的是为了保证恢复和复制的正确性.因为不加锁的话,如果在上述语句执行过程中,其他事务对source_tab做了更新操作,就可能导致数据恢复的结果错误.</p>
+<p><strong>CTAS操作不给原表加锁带来的安全问题例子</strong></p>
+<p><code>将系统变量innodb_locks_unsafe_for_binlog的值设置为&quot;on&quot;(默认值是off)</code></p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt;set innodb_locks_unsafe_for_binlog=&apos;on&apos;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; select * from target_tab;
+Empty set (0.00 sec)
+
+ mysql&gt; select * from source_tab where name = &apos;1&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 1    |  1 |
+|  5 | 1    |  1 |
+|  6 | 1    |  1 |
+|  7 | 1    |  1 |
+|  8 | 1    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; select * from target_tab;
+Empty set (0.00 sec)
+
+mysql&gt; select * from source_tab where name = &apos;1&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 1    |  1 |
+|  5 | 1    |  1 |
+|  6 | 1    |  1 |
+|  7 | 1    |  1 |
+|  8 | 1    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; insert into target_tab select d1,name from source_tab where name = &apos;1&apos;;
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>session1未提交,可以对session1的select的记录进行更新操作</code></p>
+<pre><code>mysql&gt; update source_tab set name = &apos;8&apos; where name = &apos;1&apos;;
+Query OK, 5 rows affected (0.00 sec)
+Rows matched: 5  Changed: 5  Warnings: 0
+
+ mysql&gt; select * from source_tab where name = &apos;8&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 8    |  1 |
+|  5 | 8    |  1 |
+|  6 | 8    |  1 |
+|  7 | 8    |  1 |
+|  8 | 8    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session2:</p>
+<pre><code>更新操作先提交
+mysql&gt; commit;
+Query OK, 0 rows affected (0.05 sec)
+</code></pre></li>
+<li><p>session1:</p>
+<pre><code>插入操作后提交
+mysql&gt; commit;
+Query OK, 0 rows affected (0.07 sec)
+</code></pre></li>
+</ul>
+<p>第四步:</p>
+<ul>
+<li><p>session1:</p>
+<p>  <code>此时查看数据,target_tab中可以插入source_tab更新前的结果,这符合应用逻辑</code></p>
+<pre><code>mysql&gt; select * from source_tab where name = &apos;8&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 8    |  1 |
+|  5 | 8    |  1 |
+|  6 | 8    |  1 |
+|  7 | 8    |  1 |
+|  8 | 8    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+
+mysql&gt; select * from target_tab;
+
++------+------+
+| id   | name |
++------+------+
+| 4    | 1.00 |
+| 5    | 1.00 |
+| 6    | 1.00 |
+| 7    | 1.00 |
+| 8    | 1.00 |
++------+------+
+5 rows in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select * from tt1 where name = &apos;1&apos;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from source_tab where name = &apos;8&apos;;
+
++----+------+----+
+| d1 | name | d2 |
++----+------+----+
+|  4 | 8    |  1 |
+|  5 | 8    |  1 |
+|  6 | 8    |  1 |
+|  7 | 8    |  1 |
+|  8 | 8    |  1 |
++----+------+----+
+5 rows in set (0.00 sec)
+
+mysql&gt; select * from target_tab;
+
++------+------+
+| id   | name |
++------+------+
+| 4    | 1.00 |
+| 5    | 1.00 |
+| 6    | 1.00 |
+| 7    | 1.00 |
+| 8    | 1.00 |
++------+------+
+5 rows in set (0.00 sec)
+</code></pre></li>
+</ul>
+<p>innodb_locks_unsafe_for_binlog的值为”on”后,InnoDB不再对source_tab加锁,结果也符合应用逻辑</p>
+<p><strong>分析BINLOG</strong></p>
+<pre><code>......
+SET TIMESTAMP=1169175130;
+BEGIN;
+# at 274
+#070119 10:51:57 server id 1  end_log_pos 105   Query   
+thread_id=1     exec_time=0     error_code=0
+SET TIMESTAMP=1169175117;
+update source_tab set name = &apos;8&apos; where name = &apos;1&apos;;
+# at 379
+#070119 10:52:10 server id 1  end_log_pos 406   Xid = 5
+COMMIT;
+# at 406
+#070119 10:52:14 server id 1  end_log_pos 474   Query   
+thread_id=2     exec_time=0     error_code=0
+SET TIMESTAMP=1169175134;
+BEGIN;
+# at 474
+#070119 10:51:29 server id 1  end_log_pos 119   Query   
+thread_id=2     exec_time=0     error_code=0
+SET TIMESTAMP=1169175089;
+insert into target_tab select d1,name from source_tab where name = &apos;1&apos;;
+# at 593
+#070119 10:52:14 server id 1  end_log_pos 620   Xid = 7
+COMMIT;
+......
+</code></pre><p><code>更新操作的位置在INSERT...SELECT之前</code>,如果使用这个BINLOG进行数据库恢复，恢复的结果与实际的<code>应用逻辑不符</code>;如果进行复制,就会<code>导致主从数据库不一致</code>.</p>
+<p>如果上述语句的SELECT是范围条件,InnoDB还会给源表加间隙锁(Next-Lock)</p>
+<p>MySQL将这种SQL叫作不确定(non-deterministic)的SQL.会阻止对源表的并发更新,造成对源表锁的等待.</p>
+<p><strong>解决方案</strong></p>
+<p>使用<code>&quot;select * from source_tab ... Into outfile&quot;</code>和<code>&quot;load data infile ...&quot;</code>语句组合来间接实现,采用这种方式MySQL不会给source_tab加锁.</p>
+<p>###InnoDB在不同隔离级别下的一致性读及锁的差异<br><img src="https://i.imgur.com/zQdJHlM.png" alt=""></p>
+<p>隔离级别越高,InnoDB给记录集加的锁就越严格.产生锁冲突的可能性也就越高.从而对并发性事务处理性能的影响也就越大.</p>
+<p>对于一些确实需要更高隔离级别的事务,可以通过在程序中执行<code>SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ</code>或<code>SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE</code>动态改变隔离级别的方式满足需求.</p>
+<p>###InnoDB什么时候使用表锁</p>
+<ul>
+<li><code>事务需要更新大部分或全部数据</code>,<code>表又比较大</code>,如果使用默认的行锁,不仅这个事务执行效率低,而且可<code>能造成其他事务长时间锁等待和锁冲突</code>,这种情况下可以考虑使用表锁来提高该事务的执行速度.</li>
+<li>事务涉及多个表,比较复杂,很可能引起死锁,造成大量事务回滚.这种情况也可以考虑一次性锁定事务涉及的表,从而避免死锁、减少数据库因事务回滚带来的开销.</li>
+</ul>
+<p><strong>注意要点</strong></p>
+<ul>
+<li>将AUROCOMMIT设为0,否则MySQL不会给表加锁.</li>
+<li>事务结束前,<code>不要用UNLOCK TABLES释放表锁</code>,因为UNLOCK TABLES<code>会隐含地提交事务</code>.</li>
+<li><p>COMMIT或ROLLBACK<code>并不能释放用LOCK TABLES加的表级锁</code>,必须用UNLOCK TABLES释放表锁.</p>
+<pre><code>例如，如果需要写表t1并从表t读，可以按如下做：
+
+SET AUTOCOMMIT=0;
+LOCK TABLES t1 WRITE, t2 READ, ...;
+[do something with tables t1 and t2 here];
+COMMIT;
+UNLOCK TABLES;
+</code></pre></li>
+</ul>
+<p>###关于死锁</p>
+<p><strong>MyISAM不会有死锁</strong></p>
+<p>MyISAM总是一次获得所需的全部锁,要么全部满足,要么等待,因此不会出现死锁.</p>
+<p><strong>InnoDB存在死锁</strong></p>
+<p>除单个SQL组成的事务外,锁是逐步获得的.有可能发生死锁.</p>
+<p><strong>InnoDB存储引擎中的死锁例子</strong></p>
+<p><code>两个事务都需要获得对方持有的排他锁才能继续完成事务,这种循环锁等待就是典型的死锁</code>    </p>
+<p>第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; select * from table_1 where where id=1 for update;
+...
+做一些其他处理...
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql&gt; select * from table_2 where id=1 for update;
+...
+</code></pre></li>
+</ul>
+<p>第二步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>select * from table_2 where id =1 for update;
+
+因session2已取得排他锁,等待
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>做一些其他处理...
+</code></pre></li>
+</ul>
+<p>第三步:</p>
+<ul>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select * from table_1 where where id=1 for update;
+
+死锁
+</code></pre></li>
+</ul>
+<p><strong>innodb_lock_wait_timeout</strong></p>
+<p>发生死锁后,InnoDB一般都能自动检测到,并使一个事务释放锁并回退,另一个事务获得锁,继续完成事务.</p>
+<p>但在涉及外部锁,或涉及表锁的情况下,InnoDB并不能完全自动检测到死锁.</p>
+<p><code>innodb_lock_wait_timeout</code>:这个参数并不是只用来解决死锁问题,在并发访问比较高的情况下,如果大量事务因无法立即获得所需的锁而挂起,会占用大量计算机资源,造成严重性能问题,甚至拖跨数据库.我们通过设置合适的锁等待超时阈值,可以避免这种情况发生.</p>
+<p>####避免死锁</p>
+<ol>
+<li><p>如果不同的程序会并发存取多个表,应尽量<code>约定以相同的顺序来访问表</code>,这样可以大大降低产生死锁的机会.</p>
+<p> <strong>InnoDB存储引擎中表顺序造成的死锁例子</strong></p>
+<p> 第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre><p>第二步:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 1 for update;
+
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| PENELOPE   | GUINESS   |
++------------+-----------+
+1 row in set (0.00 sec)
+</code></pre><p>第三步:</p>
+</li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; insert into country (country_id,country) values(110,&apos;Test&apos;);
+
+Query OK, 1 row affected (0.00 sec)
+</code></pre><p>第四步:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt;  insert into country (country_id,country) values(110,&apos;Test&apos;);
+
+等待
+</code></pre><p>第五步:</p>
+</li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 1 for update;
+
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| PENELOPE   | GUINESS   |
++------------+-----------+
+1 row in set (0.00 sec)        
+</code></pre><p>第六步:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt;  insert into country (country_id,country) values(110,&apos;Test&apos;);
+
+ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+</code></pre></li>
+</ul>
+</li>
+<li><p>在程序以批量方式处理数据的时候,如果<code>事先对数据排序</code>,保证每个线程按固定的顺序来处理记录,也可以大大降低出现死锁的可能.</p>
+<p> <strong>InnoDB存储引擎中表数据操作顺序不一致造成的死锁例子</strong></p>
+<p> 第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre><p>第二步:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 1 for update;
+
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| PENELOPE   | GUINESS   |
++------------+-----------+
+1 row in set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 3 for update;
+
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| ED         | CHASE     |
++------------+-----------+
+1 row in set (0.00 sec)
+</code></pre><p>第三步:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 3 for update;
+
+等待
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 1 for update;
+
+ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+</code></pre><p>第四部:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select first_name,last_name from actor where actor_id = 3 for update;
+
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| ED         | CHASE     |
++------------+-----------+
+1 row in set (4.71 sec)
+</code></pre></li>
+</ul>
+</li>
+<li><p>在事务中,如果要更新记录,应该<code>直接申请足够级别的锁</code>,即<code>排他锁</code>,而<code>不应先申请共享锁</code>,更新时<code>再申请排他锁</code>,因为当用户申请排他锁时,其他事务可能又已经获得了相同记录的共享锁,从而造成锁冲突,甚至死锁.</p>
+</li>
+<li><p>在REPEATABLE-READ隔离级别下,如果两个线程同时对相同条件记录用SELECT…FOR UPDATE加排他锁,在没有符合该条件记录情况下,两个线程都会加锁成功.程序发现记录尚不存在,就试图插入一条新记录,如果两个线程都这么做,就会出现死锁.这种情况下,将隔离级别改成READ COMMITTED,就可避免问题</p>
+<p> <strong>InnoDB存储引擎中隔离级别引起的死锁例子</strong></p>
+<p> 第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select @@tx_isolation;
+
++-----------------+
+| @@tx_isolation  |
++-----------------+
+| REPEATABLE-READ |
++-----------------+
+1 row in set (0.00 sec)
+</code></pre></li>
+</ul>
+</li>
+</ol>
+<pre><code>        mysql&gt; set autocommit = 0;
+        Query OK, 0 rows affected (0.00 sec)
+
+* session2:
+
+        mysql&gt; select @@tx_isolation;
+
+        +-----------------+
+        | @@tx_isolation  |
+        +-----------------+
+        | REPEATABLE-READ |
+        +-----------------+
+        1 row in set (0.00 sec)
+
+
+        mysql&gt; set autocommit = 0;
+        Query OK, 0 rows affected (0.00 sec)
+
+第二步:
+
+* session1:
+
+    `当前session对不存在的记录加for update的锁`
+
+        mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 201 for update;
+        Empty set (0.00 sec)
+
+* session2:
+
+    `其他session也可以对不存在的记录加for update的锁`
+
+        mysql&gt; select actor_id,first_name,last_name from actor where actor_id = 201 for update;
+        Empty set (0.00 sec)
+
+第三步:
+
+* session1:
+
+    `因为其他session也对该记录加了锁,所以当前的插入会等待`
+
+        mysql&gt; insert into actor (actor_id , first_name , last_name) values(201,&apos;Lisa&apos;,&apos;Tom&apos;);
+
+        等待
+
+* session2:
+
+    `因为其他session已经对记录进行了更新，这时候再插入记录就会提示死锁并退出`
+
+        mysql&gt; insert into actor (actor_id, first_name , last_name) values(201,&apos;Lisa&apos;,&apos;Tom&apos;);
+
+        ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+
+第四步:
+
+* session1:
+
+    `由于其他session已经退出,当前session可以获得锁并成功插入记录`
+
+        mysql&gt; insert into actor (actor_id , first_name , last_name) values(201,&apos;Lisa&apos;,&apos;Tom&apos;);
+        Query OK, 1 row affected (13.35 sec)
+</code></pre><ol start="5">
+<li><p>当隔离级别为READ COMMITTED时,如果两个线程都先执行SELECT…FOR UPDATE.判断是否存在符合条件的记录,如果没有,就插入记录.此时,只有一个线程能插入成功,另一个线程会出现锁等待,当第1个线程提交后,第2个线程会因主键重出错,但虽然这个线程出错了,却会获得一个排他锁!这时如果有第3个线程又来申请排他锁,也会出现死锁.</p>
+<p> 第一步:</p>
+<ul>
+<li><p>session1:</p>
+<pre><code>mysql&gt; select @@tx_isolation;
+
++----------------+
+| @@tx_isolation |
++----------------+
+| READ-COMMITTED |
++----------------+
+1 row in set (0.00 sec)
+
+ mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.01 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<pre><code>mysql&gt; select @@tx_isolation;
+
++----------------+
+| @@tx_isolation |
++----------------+
+| READ-COMMITTED |
++----------------+
+1 row in set (0.00 sec)
+
+ mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.01 sec)
+</code></pre></li>
+<li><p>session3:</p>
+<pre><code>mysql&gt; select @@tx_isolation;
+
++----------------+
+| @@tx_isolation |
++----------------+
+| READ-COMMITTED |
++----------------+
+1 row in set (0.00 sec)
+
+ mysql&gt; set autocommit=0;
+Query OK, 0 rows affected (0.01 sec)
+</code></pre><p>第二步:</p>
+</li>
+<li><p>session1:</p>
+<p>  <code>session1获得for update的共享锁</code></p>
+<pre><code>mysql&gt; select actor_id, first_name,last_name from actor where actor_id = 201 for update;
+Empty set (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>由于记录不存在,session2也可以获得for update的共享锁</code></p>
+<pre><code>mysql&gt; select actor_id, first_name,last_name from actor where actor_id = 201 for update;
+Empty set (0.00 sec)
+</code></pre><p>第三步:</p>
+</li>
+<li><p>session1:</p>
+<p>  <code>session1可以成功插入记录</code></p>
+<pre><code>mysql&gt; insert into actor (actor_id,first_name,last_name) values(201,&apos;Lisa&apos;,&apos;Tom&apos;);
+Query OK, 1 row affected (0.00 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>session2插入申请等待获得锁</code></p>
+<pre><code>mysql&gt; insert into actor (actor_id,first_name,last_name) values(201,&apos;Lisa&apos;,&apos;Tom&apos;);
+
+等待
+</code></pre><p>第四步:</p>
+</li>
+<li><p>session1:</p>
+<pre><code>mysql&gt; commit;
+Query OK, 0 rows affected (0.04 sec)
+</code></pre></li>
+<li><p>session2:</p>
+<p>  <code>session2获得锁,发现插入记录主键重,这个时候抛出了异常,但是并没有释放排他锁</code></p>
+<pre><code>mysql&gt; insert into actor (actor_id,first_name,last_name) values(201,&apos;Lisa&apos;,&apos;Tom&apos;);
+ERROR 1062 (23000): Duplicate entry &apos;201&apos; for key &apos;PRIMARY&apos;
+</code></pre></li>
+<li><p>session3:</p>
+<p>  <code>session3申请获得排他锁,因为session2已经锁定该记录,所以session3需要等待</code></p>
+<pre><code>mysql&gt; select actor_id, first_name,last_name from actor where actor_id = 201 for update;
+
+等待
+</code></pre><p>第五步:</p>
+</li>
+<li><p>session2:</p>
+<p>  <code>如果session2直接对记录进行更新操作,则会抛出死锁的异常</code></p>
+<pre><code>mysql&gt; update actor set last_name=&apos;Lan&apos; where actor_id = 201;
+
+ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+</code></pre></li>
+<li><p>session3:</p>
+<p>  <code>session2释放锁后,session3获得锁</code></p>
+<pre><code>mysql&gt; select first_name, last_name from actor where actor_id = 201 for update;
+
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| Lisa       | Tom       |
++------------+-----------+
+1 row in set (31.12 sec)
+</code></pre></li>
+</ul>
+</li>
+</ol>
+<p><strong>死锁分析</strong></p>
+<p><code>SHOW INNODB STATUS</code>命令来确定最后一个死锁产生的原因.</p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

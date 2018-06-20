@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>浅拷贝和深拷贝 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>浅拷贝和深拷贝</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年05月16日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h3 id="浅拷贝"><a href="#浅拷贝" class="headerlink" title="浅拷贝"></a>浅拷贝</h3><p>被复制对象的所有变量都含有与原来的对象相同的值，而所有的对其他对象的引用仍然指向原来的对象。换言之，浅复制仅仅复制所考虑的对象，而不复制它所引用的对象。</p>
+<p>下面我们看一个例子：</p>
+<pre><code>public class Book implements Cloneable {
+    String bookName;
+    double price;
+    Person author;
+
+    public Book(String bn, double price, Person author) {
+        bookName = bn;
+        this.price = price;
+        this.author = author;
+    }
+
+    public Object clone() {
+        Book b = null;
+        try {
+            b = (Book) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return b;
+    }
+
+    public static void main(String args[]) {
+        Person p = new Person(&quot;Dream&quot;, 34);
+        Book book1 = new Book(&quot;Java开发&quot;, 30.00, p);
+        Book book2 = (Book) b1.clone();
+        book2.price = 44.00;
+        book2.author.setAge(45);
+        book2.author.setName(&quot;Fish&quot;);
+        book2.bookName = &quot;Android开发&quot;;
+        System.out.print(&quot;age = &quot; + book1.author.getAge() + &quot;  name = &quot; 
+        + book1.bookName + &quot;     price = &quot; + book1.price);
+        System.out.println();
+        System.out.print(&quot;age = &quot; + book2.author.getAge() + &quot;  name = &quot; 
+        + book2.bookName + &quot;     price = &quot; + book2.price);
+    }
+}
+</code></pre><blockquote>
+<p>结果：</p>
+</blockquote>
+<blockquote>
+<p>age = 45  name = Java开发     price = 30.0</p>
+<p>age = 45  name = Android开发     price = 44.0</p>
+</blockquote>
+<p>从结果中发现在改变 book2 对象的 name 和 price 属性时 book1 的属性并不会跟随改变，当改变 book2 对象的 author 属性时 book1 的 author 对象的属性也改变了，说明 author 是浅拷贝，和 book1 的 author 是使用同一引用。这时我们就需要使用深拷贝了。</p>
+<h3 id="深拷贝"><a href="#深拷贝" class="headerlink" title="深拷贝"></a>深拷贝</h3><p>被复制对象的所有变量都含有与原来的对象相同的值，除去那些引用其他对象的变量。那些引用其他对象的变量将指向被复制过的新对象，而不再是原有的那些被引用的对象。换言之，深复制把要复制的对象所引用的对象都复制了一遍。</p>
+<p>为了解决上面 Person 对象未完全拷贝问题，我们需要用到深拷贝，其实很简单在拷贝book对象的时候加入如下语句：</p>
+<pre><code>b.author =(Person)author.clone(); //将Person对象进行拷贝，Person对象需进行了拷贝
+</code></pre><blockquote>
+<p>结果</p>
+</blockquote>
+<blockquote>
+<p>age = 34  name = Java开发     price = 30.0</p>
+<p>age = 45  name = Android开发     price = 44.0</p>
+</blockquote>
+<p>上面是用 clone() 方法实现深拷贝，传统重载clone()方法，但当类中有很多引用时，比较麻烦。 当然我们还有一种深拷贝方法，就是将对象 <strong>序列化</strong> 。</p>
+<p>把对象写到流里的过程是序列化（Serilization）过程；而把对象从流中读出来的反序列化（Deserialization）过程。应当指出的是，写在流里的是对象的一个拷贝，而原对象仍然存在于JVM里面。</p>
+<p>在Java语言里深复制一个对象，常常可以先使对象实现Serializable接口，然后把对象（实际上只是对象的一个拷贝）写到一个流里，再从流里读出来，便可以重建对象。</p>
+<p>还是上面的例子，我们重写 clone() 方法：</p>
+<pre><code>public Object deepClone() throws IOException, OptionalDataException, ClassNotFoundException {
+    // 将对象写到流里
+    OutputStream bo = new ByteArrayOutputStream();
+    //OutputStream op = new ObjectOutputStream();
+    ObjectOutputStream oo = new ObjectOutputStream(bo);
+    oo.writeObject(this);
+
+    // 从流里读出来
+    InputStream bi = new ByteArrayInputStream(((ByteArrayOutputStream) bo).toByteArray());
+    ObjectInputStream oi = new ObjectInputStream(bi);
+    return (oi.readObject());
+}
+</code></pre><p>然后在拷贝对象时调用重写的 deepClone() 方法</p>
+<pre><code>Book book2 = (Book) b1.deepClone();
+</code></pre><blockquote>
+<p>结果</p>
+</blockquote>
+<blockquote>
+<p>age = 34  name = Java开发     price = 30.0</p>
+<p>age = 45  name = Android开发     price = 44.0</p>
+</blockquote>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#浅拷贝"><span class="toc-number">1.</span> <span class="toc-text">浅拷贝</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#深拷贝"><span class="toc-number">2.</span> <span class="toc-text">深拷贝</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

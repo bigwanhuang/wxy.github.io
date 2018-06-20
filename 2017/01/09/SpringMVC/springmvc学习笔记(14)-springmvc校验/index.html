@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>springmvc学习笔记(14)-springmvc校验 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>springmvc学习笔记(14)-springmvc校验</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年01月09日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SpringMVC/">SpringMVC</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="校验理解"><a href="#校验理解" class="headerlink" title="校验理解"></a>校验理解</h2><p>项目中，通常使用较多是前端的校验，比如页面中js校验。对于安全要求较高点建议在服务端进行校验。</p>
+<p>服务端校验：</p>
+<ul>
+<li>控制层conroller：校验页面请求的参数的合法性。在服务端控制层conroller校验，不区分客户端类型（浏览器、手机客户端、远程调用）</li>
+<li>业务层service（使用较多）：主要校验关键业务参数，仅限于service接口中使用的参数。</li>
+<li>持久层dao：一般是不校验的。</li>
+</ul>
+<h2 id="springmvc校验需求"><a href="#springmvc校验需求" class="headerlink" title="springmvc校验需求"></a>springmvc校验需求</h2><p>springmvc使用hibernate的校验框架validation(和hibernate没有任何关系)。</p>
+<p>校验思路：</p>
+<p>页面提交请求的参数，请求到controller方法中，使用validation进行校验。如果校验出错，将错误信息展示到页面。</p>
+<p>具体需求：</p>
+<p>商品修改，添加校验（校验商品名称长度，生产日期的非空校验），如果校验出错，在商品修改页面显示错误信息。</p>
+<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><p>我们需要三个jar包：</p>
+<ul>
+<li>hibernate-validator.jar</li>
+<li>jboss-logging.jar</li>
+<li>validation-api.jar</li>
+</ul>
+<p>这里我们添加maven依赖</p>
+<pre><code>&lt;!-- hibernate 校验 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+    &lt;artifactId&gt;hibernate-validator&lt;/artifactId&gt;
+    &lt;version&gt;5.2.4.Final&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre><p>查看maven依赖树</p>
+<pre><code>[INFO] \- org.hibernate:hibernate-validator:jar:5.2.4.Final:compile
+[INFO]    +- javax.validation:validation-api:jar:1.1.0.Final:compile
+[INFO]    +- org.jboss.logging:jboss-logging:jar:3.2.1.Final:compile
+[INFO]    \- com.fasterxml:classmate:jar:1.1.0:compile
+</code></pre><p>可以看到，另外两个jar包被<code>hibernate-validator</code>依赖，所以不用再额外添加了。</p>
+<h2 id="配置校验器"><a href="#配置校验器" class="headerlink" title="配置校验器"></a>配置校验器</h2><ul>
+<li>在springmvc.xml中添加</li>
+</ul>
+<pre><code>&lt;!-- 校验器 --&gt;
+&lt;bean id=&quot;validator&quot;
+      class=&quot;org.springframework.validation.beanvalidation.LocalValidatorFactoryBean&quot;&gt;
+    &lt;!-- hibernate校验器--&gt;
+    &lt;property name=&quot;providerClass&quot; value=&quot;org.hibernate.validator.HibernateValidator&quot; /&gt;
+    &lt;!-- 指定校验使用的资源文件，在文件中配置校验错误信息，如果不指定则默认使用classpath下的ValidationMessages.properties --&gt;
+    &lt;property name=&quot;validationMessageSource&quot; ref=&quot;messageSource&quot; /&gt;
+&lt;/bean&gt;
+&lt;!-- 校验错误信息配置文件 --&gt;
+&lt;bean id=&quot;messageSource&quot;
+      class=&quot;org.springframework.context.support.ReloadableResourceBundleMessageSource&quot;&gt;
+    &lt;!-- 资源文件名--&gt;
+    &lt;property name=&quot;basenames&quot;&gt;
+        &lt;list&gt;
+            &lt;value&gt;classpath:CustomValidationMessages&lt;/value&gt;
+        &lt;/list&gt;
+    &lt;/property&gt;
+    &lt;!-- 资源文件编码格式 --&gt;
+    &lt;property name=&quot;fileEncodings&quot; value=&quot;utf-8&quot; /&gt;
+    &lt;!-- 对资源文件内容缓存时间，单位秒 --&gt;
+    &lt;property name=&quot;cacheSeconds&quot; value=&quot;120&quot; /&gt;
+&lt;/bean&gt;
+</code></pre><ul>
+<li>校验器注入到处理器适配器中</li>
+</ul>
+<pre><code>&lt;mvc:annotation-driven conversion-service=&quot;conversionService&quot;
+                       validator=&quot;validator&quot;&gt;
+&lt;/mvc:annotation-driven&gt;
+</code></pre><ul>
+<li>在CustomValidationMessages.properties配置校验错误信息：</li>
+</ul>
+<pre><code>#添加校验的错误提示信息
+items.name.length.error=请输入1到30个字符的商品名称
+items.createtime.isNUll=请输入商品的生产日期
+</code></pre><h2 id="在pojo中添加校验规则"><a href="#在pojo中添加校验规则" class="headerlink" title="在pojo中添加校验规则"></a>在pojo中添加校验规则</h2><p>在ItemsCustom.java中添加校验规则：</p>
+<pre><code>public class Items {
+private Integer id;
+//校验名称在1到30字符中间
+//message是提示校验出错显示的信息
+//groups：此校验属于哪个分组，groups可以定义多个分组
+@Size(min=1,max=30,message=&quot;{items.name.length.error}&quot;)
+private String name;
+
+private Float price;
+
+private String pic;
+
+//非空校验
+@NotNull(message=&quot;{items.createtime.isNUll}&quot;)
+private Date createtime;
+</code></pre><p><code>`</code></p>
+<h2 id="捕获和显示校验错误信息"><a href="#捕获和显示校验错误信息" class="headerlink" title="捕获和显示校验错误信息"></a>捕获和显示校验错误信息</h2><pre><code>@RequestMapping(&quot;/editItemsSubmit&quot;)
+public String editItemsSubmit(
+        Model model,
+        HttpServletRequest request,
+        Integer id,
+        @Validated ItemsCustom itemsCustom,
+        BindingResult bindingResult)throws Exception {
+</code></pre><ul>
+<li>在controller中将错误信息传到页面即可</li>
+</ul>
+<pre><code>//获取校验错误信息
+if(bindingResult.hasErrors()){
+    // 输出错误信息
+    List&lt;ObjectError&gt; allErrors = bindingResult.getAllErrors();
+
+    for (ObjectError objectError :allErrors){
+        // 输出错误信息
+        System.out.println(objectError.getDefaultMessage());
+    }
+    // 将错误信息传到页面
+    model.addAttribute(&quot;allErrors&quot;, allErrors);
+
+    //可以直接使用model将提交pojo回显到页面
+    model.addAttribute(&quot;items&quot;, itemsCustom);
+
+    // 出错重新到商品修改页面
+    return &quot;items/editItems&quot;;
+}
+</code></pre><ul>
+<li>页面显示错误信息：</li>
+</ul>
+<pre><code>&lt;!-- 显示错误信息 --&gt;
+&lt;c:if test=&quot;${allErrors!=null }&quot;&gt;
+    &lt;c:forEach items=&quot;${allErrors }&quot; var=&quot;error&quot;&gt;
+        ${ error.defaultMessage}&lt;br/&gt;
+    &lt;/c:forEach&gt;
+&lt;/c:if&gt;
+</code></pre><h2 id="分组校验"><a href="#分组校验" class="headerlink" title="分组校验"></a>分组校验</h2><ul>
+<li>需求：<ul>
+<li>在pojo中定义校验规则，而pojo是被多个controller所共用，当不同的controller方法对同一个pojo进行校验，但是每个controller方法需要不同的校验</li>
+</ul>
+</li>
+<li>解决方法：<ul>
+<li>定义多个校验分组（其实是一个java接口），分组中定义有哪些规则</li>
+<li>每个controller方法使用不同的校验分组</li>
+</ul>
+</li>
+</ul>
+<p>1.校验分组</p>
+<pre><code>public interface ValidGroup1 {
+    //接口中不需要定义任何方法，仅是对不同的校验规则进行分组
+    //此分组只校验商品名称长度
+
+}
+</code></pre><p>2.在校验规则中添加分组</p>
+<pre><code>//校验名称在1到30字符中间
+//message是提示校验出错显示的信息
+//groups：此校验属于哪个分组，groups可以定义多个分组
+@Size(min=1,max=30,message=&quot;{items.name.length.error}&quot;,groups = {ValidGroup1.class})
+private String name;
+</code></pre><p>3.在controller方法使用指定分组的校验</p>
+<pre><code>// value={ValidGroup1.class}指定使用ValidGroup1分组的校验
+@RequestMapping(&quot;/editItemsSubmit&quot;)
+public String editItemsSubmit(
+        Model model,
+        HttpServletRequest request,
+        Integer id,
+        @Validated(value = ValidGroup1.class)ItemsCustom itemsCustom,
+        BindingResult bindingResult)throws Exception {
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#校验理解"><span class="toc-number">1.</span> <span class="toc-text">校验理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#springmvc校验需求"><span class="toc-number">2.</span> <span class="toc-text">springmvc校验需求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#环境准备"><span class="toc-number">3.</span> <span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#配置校验器"><span class="toc-number">4.</span> <span class="toc-text">配置校验器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#在pojo中添加校验规则"><span class="toc-number">5.</span> <span class="toc-text">在pojo中添加校验规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#捕获和显示校验错误信息"><span class="toc-number">6.</span> <span class="toc-text">捕获和显示校验错误信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分组校验"><span class="toc-number">7.</span> <span class="toc-text">分组校验</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

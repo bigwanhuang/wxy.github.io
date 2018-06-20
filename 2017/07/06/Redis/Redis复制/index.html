@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>Redis复制 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>Redis复制</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年07月06日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="建立复制"><a href="#建立复制" class="headerlink" title="建立复制"></a>建立复制</h2><p>参与复制的Redis实例划分为主节点和从节点。默认情况下，Redis都是主节点。每个从节点只能有一个主节点，而主节点可以同时具有多个从节点。复制的数据流是单向的，只能由主节点复制到从节<br>点。配置复制的方式有以下三种：</p>
+<ol>
+<li>在配置文件中加入slaveof{masterHost}{masterPort}随Redis启动生<br>效。</li>
+<li>在redis-server启动命令后加入–slaveof{masterHost}{masterPort}生<br>效。</li>
+<li>直接使用命令：slaveof{masterHost}{masterPort}生效。</li>
+</ol>
+<p><strong>slaveof本身是异步命令，执行slaveof命令时，节点只保存主节点信息后返回，后续复制流程在节点内部异步执行。主从节点复制成功建立后，可以使用info replication命令查看复制相关状态 </strong></p>
+<h2 id="断开复制"><a href="#断开复制" class="headerlink" title="断开复制"></a>断开复制</h2><p><strong>从节点执行slaveof no one命令断开与主节点的复制关系</strong></p>
+<p><strong>断开复制主要流程：</strong></p>
+<ol>
+<li>断开与主节点复制关系。</li>
+<li>从节点晋升为主节点。</li>
+</ol>
+<p>从节点断开复制后并不会抛弃原有数据，只是无法再获取主节点上的数<br>据变化。</p>
+<p>通过slaveof命令还可以实现切主操作，所谓切主是指把当前从节点对主<br>节点的复制切换到另一个主节点。执行slaveof{newMasterIp}<br>{newMasterPort}命令即可</p>
+<h2 id="复制过程"><a href="#复制过程" class="headerlink" title="复制过程"></a>复制过程</h2><p><img src="https://i.imgur.com/rlkVnxa.jpg" alt=""></p>
+<p><strong>全量复制</strong></p>
+<p>一般用于初次复制场景，Redis早期支持的复制功能只有全<br>量复制，它会把主节点全部数据一次性发送给从节点，当数据量较大时，会<br>对主从节点和网络造成很大的开销。</p>
+<p><strong>部分复制</strong></p>
+<p>用于处理在主从复制中因网络闪断等原因造成的数据丢失<br>场景，当从节点再次连上主节点后，如果条件允许，主节点会补发丢失数据<br>给从节点。因为补发的数据远远小于全量数据，可以有效避免全量复制的过<br>高开销。</p>
+<ul>
+<li>psync命令运行需要以下组件支持：<ul>
+<li>主从节点各自复制偏移量。</li>
+<li>主节点复制积压缓冲区。</li>
+<li>主节点运行id。</li>
+</ul>
+</li>
+</ul>
+<h2 id="心跳"><a href="#心跳" class="headerlink" title="心跳"></a>心跳</h2><ul>
+<li><p>主从心跳判断机制：</p>
+<ol>
+<li>主从节点彼此都有心跳检测机制，各自模拟成对方的客户端进行通<br>信，通过client list命令查看复制相关客户端信息，主节点的连接状态为<br>flags=M，从节点连接状态为flags=S。</li>
+<li>主节点默认每隔10秒对从节点发送ping命令，判断从节点的存活性<br>和连接状态。可通过参数repl-ping-slave-period控制发送频率。</li>
+<li><p>从节点在主线程中每隔1秒发送replconf ack{offset}命令，给主节点<br>上报自身当前的复制偏移量。replconf命令主要作用如下：</p>
+<ul>
+<li>实时监测主从节点网络状态。</li>
+<li>上报自身复制偏移量，检查复制数据是否丢失，如果从节点数据丢失，再从主节点的复制缓冲区中拉取丢失数据。</li>
+<li>实现保证从节点的数量和延迟性功能，通过min-slaves-to-write、minslaves-<br>max-lag参数配置定义。<br>主节点根据replconf命令判断从节点超时时间，体现在info replication统<br>计中的lag信息中，lag表示与从节点最后一次通信延迟的秒数，正常延迟应<br>该在0和1之间。如果超过repl-timeout配置的值（默认60秒），则判定从节点<br>下线并断开复制客户端连接。即使主节点判定从节点下线后，如果从节点重<br>新恢复，心跳检测会继续进行。</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="读写分离"><a href="#读写分离" class="headerlink" title="读写分离"></a>读写分离</h2><p><strong>对于读占比较高的场景，可以通过把一部分读流量分摊到从节点<br>（slave）来减轻主节点（master）压力，同时需要注意永远只对主节点执行<br>写操作</strong><br><img src="https://i.imgur.com/S7RD3dN.jpg" alt=""></p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p><strong>数据延迟</strong></p>
+<p>Redis复制数据的延迟由于异步复制特性是无法避免的，延迟取决于网<br>络带宽和命令阻塞情况，比如刚在主节点写入数据后立刻在从节点上读取可能获取不到。需要业务场景允许短时间内的数据延迟。对于无法容忍大量延迟场景，可以编写外部监控程序监听主从节点的复制偏移量，当延迟较大时触发报警或者通知客户端避免读取延迟过高的从节点</p>
+<p><strong>读到过期数据</strong></p>
+<p>当主节点存储大量设置超时的数据时，如缓存数据，Redis内部需要维<br>护过期数据删除策略，删除策略主要有两种：惰性删除和定时删除</p>
+<ul>
+<li><p>惰性删除：主节点每次处理读取命令时，都会检查键是否超时，如果超<br>时则执行del命令删除键对象，之后del命令也会异步发送给从节点。需要注<br>意的是为了保证复制的一致性，从节点自身永远不会主动删除超时数据</p>
+</li>
+<li><p>定时删除：Redis主节点在内部定时任务会循环采样一定数量的键，当<br>发现采样的键过期时执行del命令，之后再同步给从节点</p>
+</li>
+</ul>
+<h2 id="规避全量复制"><a href="#规避全量复制" class="headerlink" title="规避全量复制"></a>规避全量复制</h2><p>第一次建立复制：由于是第一次建立复制，从节点不包含任何主节点<br>数据，因此必须进行全量复制才能完成数据同步。对于这种情况全量复制无<br>法避免。当对数据量较大且流量较高的主节点添加从节点时，建议在低峰时<br>进行操作，或者尽量规避使用大数据量的Redis节点。</p>
+<ul>
+<li><p>节点运行ID不匹配：当主从复制关系建立后，从节点会保存主节点的<br>运行ID，如果此时主节点因故障重启，那么它的运行ID会改变，从节点发现<br>主节点运行ID不匹配时，会认为自己复制的是一个新的主节点从而进行全量<br>复制。对于这种情况应该从架构上规避，比如提供故障转移功能。当主节点<br>发生故障后，手动提升从节点为主节点或者采用支持自动故障转移的哨兵或集群方案。</p>
+</li>
+<li><p>复制积压缓冲区不足：当主从节点网络中断后，从节点再次连上主节<br>点时会发送psync{offset}{runId}命令请求部分复制，如果请求的偏移量不在主节点的积压缓冲区内，则无法提供给从节点数据，因此部分复制会退化为全量复制。针对这种情况需要根据网络中断时长，写命令数据量分析出合理的积压缓冲区大小。网络中断一般有闪断、机房割接、网络分区等情况。这时网络中断的时长一般在分钟级（net_break_time）。写命令数据量可以统计高峰期主节点每秒info replication的master_repl_offset差值获取</p>
+</li>
+</ul>
+<h2 id="规避复制风暴"><a href="#规避复制风暴" class="headerlink" title="规避复制风暴"></a>规避复制风暴</h2><p>复制风暴是指大量从节点对同一主节点或者对同一台机器的多个主节点<br>短时间内发起全量复制的过程。复制风暴对发起复制的主节点或者机器造成<br>大量开销，导致CPU、内存、带宽消耗。因此我们应该分析出复制风暴发生<br>的场景，提前采用合理的方式规避。规避方式有如下几个。</p>
+<ol>
+<li>单主节点复制风暴<br>单主节点复制风暴一般发生在主节点挂载多个从节点的场景。当主节点<br>重启恢复后，从节点会发起全量复制流程，这时主节点就会为从节点创建<br>RDB快照，如果在快照创建完毕之前，有多个从节点都尝试与主节点进行全<br>量同步，那么其他从节点将共享这份RDB快照。这点Redis做了优化，有效<br>避免了创建多个快照。但是，同时向多个从节点发送RDB快照，可能使主节<br>点的网络带宽消耗严重，造成主节点的延迟变大，极端情况会发生主从节点连接断开，导致复制失败。<br>解决方案首先可以减少主节点（master）挂载从节点（slave）的数量，<br>或者采用树状复制结构，加入中间层从节点用来保护主节点<br><img src="https://i.imgur.com/tfpMBUL.jpg" alt=""></li>
+</ol>
+<p><strong>重点</strong></p>
+<ol>
+<li>Redis通过复制功能实现主节点的多个副本。从节点可灵活地通过<br>slaveof命令建立或断开复制流程。</li>
+<li>复制支持树状结构，从节点可以复制另一个从节点，实现一层层向<br>下的复制流。Redis2.8之后复制的流程分为：全量复制和部分复制。全量复<br>制需要同步全部主节点的数据集，大量消耗机器和网络资源。而部分复制有<br>效减少因网络异常等原因造成的不必要全量复制情况。通过配置合理的复制<br>积压缓冲区尽量避免全量复制。</li>
+<li>主从节点之间维护心跳和偏移量检查机制，保证主从节点通信正常<br>和数据一致。</li>
+<li>Redis为了保证高性能复制过程是异步的，写命令处理完后直接返回<br>给客户端，不等待从节点复制完成。因此从节点数据集会有延迟情况。</li>
+<li>当使用从节点用于读写分离时会存在数据延迟、过期数据、从节点<br>可用性等问题，需要根据自身业务提前作出规避。</li>
+<li>在运维过程中，主节点存在多个从节点或者一台机器上部署大量主<br>节点的情况下，会有复制风暴的风险。</li>
+</ol>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#建立复制"><span class="toc-number">1.</span> <span class="toc-text">建立复制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#断开复制"><span class="toc-number">2.</span> <span class="toc-text">断开复制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#复制过程"><span class="toc-number">3.</span> <span class="toc-text">复制过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#心跳"><span class="toc-number">4.</span> <span class="toc-text">心跳</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#读写分离"><span class="toc-number">5.</span> <span class="toc-text">读写分离</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#问题"><span class="toc-number">6.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#规避全量复制"><span class="toc-number">7.</span> <span class="toc-text">规避全量复制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#规避复制风暴"><span class="toc-number">8.</span> <span class="toc-text">规避复制风暴</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

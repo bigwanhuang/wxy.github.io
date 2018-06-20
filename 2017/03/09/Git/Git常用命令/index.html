@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>Git常用命令 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>Git常用命令</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年03月09日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Git/">Git</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="Git介绍"><a href="#Git介绍" class="headerlink" title="Git介绍"></a>Git介绍</h2><ul>
+<li>Git是分布式版本控制系统</li>
+<li><p>集中式VS分布式，SVN VS Git</p>
+<ol>
+<li>SVN和Git主要的区别在于历史版本维护的位置</li>
+<li>Git本地仓库包含代码库还有历史库，在本地的环境开发就可以记录历史而SVN的历史库存在于中央仓库，每次对比与提交代码都必须连接到中央仓库才能进行。</li>
+<li>这样的好处在于：<ul>
+<li>自己可以在脱机环境查看开发的版本历史。</li>
+<li>多人开发时如果充当中央仓库的Git仓库挂了，可以随时创建一个新的中央仓库然后同步就立刻恢复了中央库。<h2 id="初始化配置"><a href="#初始化配置" class="headerlink" title="初始化配置"></a>初始化配置</h2>Git 的设置文件为 .gitconfig，它可以在用户主目录下（全局配置），也可以在项目目录下（项目配置）。</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>显示当前的 Git 配置</p>
+<blockquote>
+<p>$ git config –list</p>
+</blockquote>
+</li>
+<li><p>编辑 Git 配置文件</p>
+<blockquote>
+<p>$ git config -e [–global] //–global 表示设置全局配置，不加该参数只对当前仓库生效</p>
+</blockquote>
+</li>
+<li><p>设置提交代码时的用户信息</p>
+<blockquote>
+<p>$ git config [–global] user.name “[name]”</p>
+<p>$ git config [–global] user.email “[email address]”</p>
+</blockquote>
+</li>
+<li><p>创建 SSH key</p>
+<blockquote>
+<p>$ ssh-keygen -t rsa -C “<a href="mailto:email@example.com" target="_blank" rel="noopener">email@example.com</a>“</p>
+</blockquote>
+</li>
+</ul>
+<p>此时会生成 id_rsa 和 id_rsa.pub 两个文件，登录网站设置点击 <strong>Add SSH Key</strong> 在 <strong>key</strong> 文本里粘贴 <strong>id_rsa.pub</strong> 文件的内容</p>
+<ul>
+<li><p>关联远程仓库</p>
+<blockquote>
+<p>$ git remote add origin <a href="mailto:git@github.com" target="_blank" rel="noopener">git@github.com</a>:xxx/xxx.git</p>
+</blockquote>
+</li>
+<li><p>推送到远程 master 分支</p>
+<blockquote>
+<p>$ git push -u origin master</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="克隆代码库"><a href="#克隆代码库" class="headerlink" title="克隆代码库"></a>克隆代码库</h2><ul>
+<li><p>创建文件夹</p>
+<blockquote>
+<p>$ mkdir [folder-name] //创建文件夹</p>
+<p>$ cd [folder-name] //进入文件夹</p>
+</blockquote>
+</li>
+<li><p>在当前目录新建一个 Git 代码库</p>
+<blockquote>
+<p>$ git init</p>
+</blockquote>
+</li>
+<li><p>新建一个目录，将其初始化为 Git 代码库</p>
+<blockquote>
+<p>$ git init [project-name]</p>
+</blockquote>
+</li>
+<li><p>下载一个项目和它的整个代码历史</p>
+<blockquote>
+<p>$ git clone [url]</p>
+<p>[url : <a href="mailto:git@github.com" target="_blank" rel="noopener">git@github.com</a>:xxx/xxx.git]</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="查看代码库信息"><a href="#查看代码库信息" class="headerlink" title="查看代码库信息"></a>查看代码库信息</h2><ul>
+<li><p>显示有变更的文件</p>
+<blockquote>
+<p>$ git status</p>
+</blockquote>
+</li>
+<li><p>显示当前分支的版本历史</p>
+<blockquote>
+<p>$ git log [–pretty=oneline] //–pretty=oneline 参数可以简化输出信息</p>
+</blockquote>
+</li>
+<li><p>显示当前分支的最近几次提交</p>
+<blockquote>
+<p>$ git reflog</p>
+</blockquote>
+</li>
+<li><p>显示暂存区和工作区的差异</p>
+<blockquote>
+<p>$ git diff</p>
+</blockquote>
+</li>
+<li><p>显示暂存区和上一个commit的差异</p>
+<blockquote>
+<p>$ git diff –cached [file]</p>
+</blockquote>
+</li>
+<li><p>显示工作区与当前分支最新commit之间的差异</p>
+<blockquote>
+<p>$ git diff HEAD</p>
+</blockquote>
+</li>
+<li><p>查看文件内容</p>
+<blockquote>
+<p>$ cat [file]</p>
+</blockquote>
+</li>
+<li><p>查看分支合并情况</p>
+<blockquote>
+<p>$ git log –graph –pretty=oneline –abbrev-commit</p>
+</blockquote>
+</li>
+<li><p>查看分支合并图</p>
+<blockquote>
+<p>$ git log –graph</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="拉取，提交与推送操作"><a href="#拉取，提交与推送操作" class="headerlink" title="拉取，提交与推送操作"></a>拉取，提交与推送操作</h2><ul>
+<li><p>下载远程仓库的所有变动</p>
+<blockquote>
+<p>$ git fetch [remote]</p>
+</blockquote>
+</li>
+<li><p>取回远程仓库的变化，并与本地分支合并</p>
+<blockquote>
+<p>$ git pull [remote] [branch]</p>
+</blockquote>
+</li>
+<li><p>添加文件到暂存区</p>
+<blockquote>
+<p>$ git add [file1] [file2] … //添加文件名</p>
+<p>$ git add [dir]  //添加目录</p>
+<p>$ git add . //添加当前目录的所有文件(不包括删除文件)</p>
+<p>$ git add -A //(-A : –all的缩写)添加当前目录的所有文件</p>
+</blockquote>
+</li>
+<li><p>提交暂存区到仓库区</p>
+<blockquote>
+<p>$ git commit -m [message]</p>
+</blockquote>
+</li>
+<li><p>推送到远程仓库</p>
+<blockquote>
+<p>$ git push [remote] [branch]</p>
+<p>$ git push [remote] –all</p>
+<p>$ git push origin(远程仓库名称) master(分支名称) //将master分支上的内容推送到远程仓库，如果远程仓库没有master分支将创建</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="分支操作"><a href="#分支操作" class="headerlink" title="分支操作"></a>分支操作</h2><ul>
+<li><p>查看远程仓库信息</p>
+<blockquote>
+<p>$ git remote -v</p>
+</blockquote>
+</li>
+<li><p>列出所有本地分支和远程分支</p>
+<blockquote>
+<p>$ git branch -a</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，并切换到该分支</p>
+<blockquote>
+<p>$ git checkout -b [branch]</p>
+</blockquote>
+</li>
+</ul>
+<p>相当于</p>
+<blockquote>
+<p>$ git branch [branch-name] //新建一个分支，但依然停留在当前分支</p>
+<p>$ git checkout [branch-name] //切换到指定分支，并更新工作区；如果是远程分支将自动与远程关联本地分支</p>
+</blockquote>
+<ul>
+<li><p>新建一个分支，指向指定 commit</p>
+<blockquote>
+<p>$ git branch [branch] [commit]</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，与指定的远程分支建立追踪关系</p>
+<blockquote>
+<p>$ git branch –track [branch] [remote-branch]</p>
+</blockquote>
+</li>
+<li><p>设置本地分支与远程origin分支链接</p>
+<blockquote>
+<p>$ git branch –set-upstream [branch] origin/[branch]</p>
+</blockquote>
+</li>
+<li><p>合并指定分支到当前分支</p>
+<blockquote>
+<p>$ git merge [branch]</p>
+</blockquote>
+</li>
+<li><p>查看分支合并情况</p>
+<blockquote>
+<p>$ git log –graph –pretty=oneline –abbrev-commit</p>
+</blockquote>
+</li>
+<li><p>查看分支合并图</p>
+<blockquote>
+<p>$ git log –graph</p>
+</blockquote>
+</li>
+<li><p>删除分支</p>
+<blockquote>
+<p>$ git branch -d [branch-name]</p>
+<p>$ git branch -D [branch-name]    //强行删除</p>
+</blockquote>
+</li>
+<li><p>删除远程分支</p>
+<blockquote>
+<p>$ git push origin –delete [branch-name]</p>
+<p>$ git branch -dr [remote/branch]</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="工作区操作"><a href="#工作区操作" class="headerlink" title="工作区操作"></a>工作区操作</h2><ul>
+<li><p>查看工作区</p>
+<blockquote>
+<p>$ git stash save [desc]</p>
+</blockquote>
+</li>
+<li><p>查看工作区列表</p>
+<blockquote>
+<p>$ git stash list</p>
+</blockquote>
+</li>
+<li><p>取出工作区内容</p>
+<blockquote>
+<p>$ git stash apply [stash-name] //取出不删除</p>
+<p>$ git stash drop [stash-name] //删除</p>
+<p>$ git stash pop [stash-name] //取出并删除</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="标签操作"><a href="#标签操作" class="headerlink" title="标签操作"></a>标签操作</h2><ul>
+<li><p>创建标签</p>
+<blockquote>
+<p>$ git tag [tag-name]</p>
+<p>$ git tag [tag-name] [commit] //新建一个 tag 在指定 commit</p>
+<p>$ git tag -a [tag] -m [desc] [commit] //创建带描述的标签</p>
+</blockquote>
+</li>
+<li><p>查看所有标签</p>
+<blockquote>
+<p>$ git tag</p>
+</blockquote>
+</li>
+<li><p>查看标签信息</p>
+<blockquote>
+<p>$ git show [tag-name]</p>
+</blockquote>
+</li>
+<li><p>删除标签</p>
+<blockquote>
+<p>$ git tag -d [tag-name]</p>
+</blockquote>
+</li>
+<li><p>推送标签</p>
+<blockquote>
+<p>$ git push origin [tag-name]</p>
+<p>$ git push origin –tags //批量推送</p>
+</blockquote>
+</li>
+<li><p>删除远程标签</p>
+<blockquote>
+<p>$ git tag -d [tag-name] //先删除本地</p>
+<p>$ git push origin :refs/tags/[tag-name] //推送</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="恢复操作"><a href="#恢复操作" class="headerlink" title="恢复操作"></a>恢复操作</h2><ul>
+<li><p>恢复文件修改<br>$ git checkout – [file]</p>
+</li>
+<li><p>回退到指定 commit<br>$ git reset –hard [commit] (commit，例如：3628164…882e1e0)</p>
+</li>
+<li><p>显示当前分支的最近几次提交</p>
+<blockquote>
+<p>$ git reflog</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="其他操作"><a href="#其他操作" class="headerlink" title="其他操作"></a>其他操作</h2><ul>
+<li><p>从编辑模式切换到命令模式</p>
+<blockquote>
+<p>$ Esc</p>
+</blockquote>
+</li>
+<li><p>在命令模式下，执行存盘退出操作</p>
+<blockquote>
+<p>$ :wq</p>
+</blockquote>
+</li>
+<li><p>在命令模式下，执行存盘操作</p>
+<blockquote>
+<p>$ :w</p>
+</blockquote>
+</li>
+<li><p>在命令模式下，执行强制存盘操作</p>
+<blockquote>
+<p>$ :w!</p>
+</blockquote>
+</li>
+<li><p>在命令模式下，执行退出 vi 操作</p>
+<blockquote>
+<p>$ :q</p>
+</blockquote>
+</li>
+<li><p>在命令模式下，执行强制退出 vi 操作</p>
+<blockquote>
+<p>$ :q!</p>
+</blockquote>
+</li>
+</ul>
+<h1 id="Git-常用命令"><a href="#Git-常用命令" class="headerlink" title="Git 常用命令"></a>Git 常用命令</h1><h2 id="新建代码库"><a href="#新建代码库" class="headerlink" title="新建代码库"></a>新建代码库</h2><ul>
+<li><p>在当前目录新建一个 Git 代码库</p>
+<blockquote>
+<p>$ git init</p>
+</blockquote>
+</li>
+<li><p>新建一个目录，将其初始化为 Git 代码库</p>
+<blockquote>
+<p>$ git init [project-name]</p>
+</blockquote>
+</li>
+<li><p>下载一个项目和它的整个代码历史</p>
+<blockquote>
+<p>$ git clone [url]</p>
+<p>[url : <a href="mailto:git@github.com" target="_blank" rel="noopener">git@github.com</a>:xxx/xxx.git]</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="增加-删除文件"><a href="#增加-删除文件" class="headerlink" title="增加/删除文件"></a>增加/删除文件</h2><ul>
+<li><p>添加指定文件到暂存区</p>
+<blockquote>
+<p>$ git add [file1] [file2] …</p>
+</blockquote>
+</li>
+<li><p>添加指定目录到暂存区，包括子目录</p>
+<blockquote>
+<p>$ git add [dir]</p>
+</blockquote>
+</li>
+<li><p>添加当前目录的所有文件(不包括删除文件)到暂存区</p>
+<blockquote>
+<p>$ git add .</p>
+</blockquote>
+</li>
+<li><p>添加当前目录的所有文件到暂存区</p>
+<blockquote>
+<p>$ git add -A(–all的缩写)</p>
+</blockquote>
+</li>
+<li><p>添加每个变化前，都会要求确认</p>
+</li>
+<li><p>对于同一个文件的多处变化，可以实现分次提交</p>
+<blockquote>
+<p>$ git add -p</p>
+</blockquote>
+</li>
+<li><p>删除工作区文件，并且将这次删除放入暂存区</p>
+<blockquote>
+<p>$ git rm [file1] [file2] …</p>
+</blockquote>
+</li>
+<li><p>停止追踪指定文件，但该文件会保留在工作区</p>
+<blockquote>
+<p>$ git rm –cached [file]</p>
+</blockquote>
+</li>
+<li><p>改名文件，并且将这个改名放入暂存区</p>
+<blockquote>
+<p>$ git mv [file-original] [file-renamed]</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="代码提交"><a href="#代码提交" class="headerlink" title="代码提交"></a>代码提交</h2><ul>
+<li><p>提交暂存区到仓库区</p>
+<blockquote>
+<p>$ git commit -m [message]</p>
+</blockquote>
+</li>
+<li><p>提交暂存区的指定文件到仓库区</p>
+<blockquote>
+<p>$ git commit [file1] [file2] … -m [message]</p>
+</blockquote>
+</li>
+<li><p>提交工作区自上次 commit 之后的变化，直接到仓库区</p>
+<blockquote>
+<p>$ git commit -a</p>
+</blockquote>
+</li>
+<li><p>提交时显示所有diff信息</p>
+<blockquote>
+<p>$ git commit -v</p>
+</blockquote>
+</li>
+<li><p>使用一次新的 commit，替代上一次提交</p>
+</li>
+<li><p>如果代码没有任何新变化，则用来改写上一次 commit 的提交信息</p>
+<blockquote>
+<p>$ git commit –amend -m [message]</p>
+</blockquote>
+</li>
+<li><p>重做上一次 commit，并包括指定文件的新变化</p>
+<blockquote>
+<p>$ git commit –amend [file1] [file2] …</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="工作区"><a href="#工作区" class="headerlink" title="工作区"></a>工作区</h2><ul>
+<li><p>查看工作区</p>
+<blockquote>
+<p>$ git stash save [desc]</p>
+</blockquote>
+</li>
+<li><p>查看工作区列表</p>
+<blockquote>
+<p>$ git stash list</p>
+</blockquote>
+</li>
+<li><p>取出工作区内容</p>
+<blockquote>
+<p>$ git stash apply [stash-name] //取出不删除</p>
+<p>$ git stash drop [stash-name] //删除</p>
+<p>$ git stash pop [stash-name] //取出并删除</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="分支"><a href="#分支" class="headerlink" title="分支"></a>分支</h2><ul>
+<li><p>列出所有本地分支</p>
+<blockquote>
+<p>$ git branch</p>
+</blockquote>
+</li>
+<li><p>列出所有远程分支</p>
+<blockquote>
+<p>$ git branch -r</p>
+</blockquote>
+</li>
+<li><p>列出所有本地分支和远程分支</p>
+<blockquote>
+<p>$ git branch -a</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，但依然停留在当前分支</p>
+<blockquote>
+<p>$ git branch [branch-name]</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，并切换到该分支</p>
+<blockquote>
+<p>$ git checkout -b [branch]<br>相当于<br>$ git branch [branch-name]</p>
+<p>$ git checkout [branch-name]</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，指向指定 commit</p>
+<blockquote>
+<p>$ git branch [branch] [commit]</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，与指定的远程分支建立追踪关系</p>
+<blockquote>
+<p>$ git branch –track [branch] [remote-branch]</p>
+</blockquote>
+</li>
+<li><p>切换到指定分支，并更新工作区</p>
+<blockquote>
+<p>$ git checkout [branch-name]</p>
+</blockquote>
+</li>
+<li><p>切换到上一个分支</p>
+<blockquote>
+<p>$ git checkout -</p>
+</blockquote>
+</li>
+<li><p>建立追踪关系，在现有分支与指定的远程分支之间</p>
+<blockquote>
+<p>$ git branch –set-upstream [branch] [remote-branch]</p>
+</blockquote>
+</li>
+<li><p>合并指定分支到当前分支</p>
+<blockquote>
+<p>$ git merge [branch]</p>
+</blockquote>
+</li>
+<li><p>选择一个commit，合并进当前分支</p>
+<blockquote>
+<p>$ git cherry-pick [commit]</p>
+</blockquote>
+</li>
+<li><p>删除分支</p>
+<blockquote>
+<p>$ git branch -d [branch-name]</p>
+<p>$ git branch -D [branch-name]    //强行删除</p>
+</blockquote>
+</li>
+<li><p>删除远程分支</p>
+<blockquote>
+<p>$ git push origin –delete [branch-name]<br>$ git branch -dr [remote/branch]</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="标签"><a href="#标签" class="headerlink" title="标签"></a>标签</h2><ul>
+<li><p>列出所有tag</p>
+<blockquote>
+<p>$ git tag</p>
+</blockquote>
+</li>
+<li><p>新建一个 tag 在当前 commit</p>
+<blockquote>
+<p>$ git tag [tag]</p>
+</blockquote>
+</li>
+<li><p>新建一个 tag 在指定 commit</p>
+<blockquote>
+<p>$ git tag [tag] [commit]</p>
+</blockquote>
+</li>
+<li><p>新建一个 tag 在指定 commit 添加描述信息</p>
+<blockquote>
+<p>$ git tag -a [tag] -m [desc] [commit]</p>
+</blockquote>
+</li>
+<li><p>删除本地 tag</p>
+<blockquote>
+<p>$ git tag -d [tag]</p>
+</blockquote>
+</li>
+<li><p>删除远程 tag</p>
+<blockquote>
+<p>$ git push origin :refs/tags/[tagName]</p>
+</blockquote>
+</li>
+<li><p>查看 tag 信息</p>
+<blockquote>
+<p>$ git show [tag]</p>
+</blockquote>
+</li>
+<li><p>提交指定 tag</p>
+<blockquote>
+<p>$ git push [remote] [tag]</p>
+</blockquote>
+</li>
+<li><p>提交所有 tag</p>
+<blockquote>
+<p>$ git push [remote] –tags</p>
+</blockquote>
+</li>
+<li><p>新建一个分支，指向某个 tag</p>
+<blockquote>
+<p>$ git checkout -b [branch] [tag]</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="查看信息"><a href="#查看信息" class="headerlink" title="查看信息"></a>查看信息</h2><ul>
+<li><p>显示有变更的文件</p>
+<blockquote>
+<p>$ git status</p>
+</blockquote>
+</li>
+<li><p>显示当前分支的版本历史</p>
+<blockquote>
+<p>$ git log</p>
+</blockquote>
+</li>
+<li><p>显示 commit 历史，以及每次 commit 发生变更的文件</p>
+<blockquote>
+<p>$ git log –stat</p>
+</blockquote>
+</li>
+<li><p>搜索提交历史，根据关键词</p>
+<blockquote>
+<p>$ git log -S [keyword]</p>
+</blockquote>
+</li>
+<li><p>显示某个 commit 之后的所有变动，每个 commit 占据一行</p>
+<blockquote>
+<p>$ git log [tag] HEAD –pretty=format:%s</p>
+</blockquote>
+</li>
+<li><p>显示某个 commit 之后的所有变动，其”提交说明”必须符合搜索条件</p>
+<blockquote>
+<p>$ git log [tag] HEAD –grep feature</p>
+</blockquote>
+</li>
+<li><p>显示某个文件的版本历史，包括文件改名</p>
+<blockquote>
+<p>$ git log –follow [file]</p>
+<p>$ git whatchanged [file]</p>
+</blockquote>
+</li>
+<li><p>显示指定文件相关的每一次 diff</p>
+<blockquote>
+<p>$ git log -p [file]</p>
+</blockquote>
+</li>
+<li><p>显示过去 5 次提交</p>
+<blockquote>
+<p>$ git log -5 –pretty –oneline</p>
+</blockquote>
+</li>
+<li><p>查看分支合并情况</p>
+<blockquote>
+<p>$ git log –graph –pretty=oneline –abbrev-commit</p>
+</blockquote>
+</li>
+<li><p>查看分支合并图</p>
+<blockquote>
+<p>$ git log –graph</p>
+</blockquote>
+</li>
+<li><p>显示所有提交过的用户，按提交次数排序</p>
+<blockquote>
+<p>$ git shortlog -sn</p>
+</blockquote>
+</li>
+<li><p>显示指定文件是什么人在什么时间修改过</p>
+<blockquote>
+<p>$ git blame [file]</p>
+</blockquote>
+</li>
+<li><p>显示暂存区和工作区的差异</p>
+<blockquote>
+<p>$ git diff</p>
+</blockquote>
+</li>
+<li><p>显示暂存区和上一个 commit 的差异</p>
+<blockquote>
+<p>$ git diff –cached [file]</p>
+</blockquote>
+</li>
+<li><p>显示工作区与当前分支最新 commit 之间的差异</p>
+<blockquote>
+<p>$ git diff HEAD</p>
+</blockquote>
+</li>
+<li><p>显示两次提交之间的差异</p>
+<blockquote>
+<p>$ git diff [first-branch]…[second-branch]</p>
+</blockquote>
+</li>
+<li><p>显示今天你写了多少行代码</p>
+<blockquote>
+<p>$ git diff –shortstat “@{0 day ago}”</p>
+</blockquote>
+</li>
+<li><p>显示某次提交的元数据和内容变化</p>
+<blockquote>
+<p>$ git show [commit]</p>
+</blockquote>
+</li>
+<li><p>显示某次提交发生变化的文件</p>
+<blockquote>
+<p>$ git show –name-only [commit]</p>
+</blockquote>
+</li>
+<li><p>显示某次提交时，某个文件的内容</p>
+<blockquote>
+<p>$ git show [commit]:[filename]</p>
+</blockquote>
+</li>
+<li><p>显示当前分支的最近几次提交</p>
+<blockquote>
+<p>$ git reflog</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="远程同步"><a href="#远程同步" class="headerlink" title="远程同步"></a>远程同步</h2><p>默认 origin 代表远程仓库</p>
+<ul>
+<li><p>下载远程仓库的所有变动</p>
+<blockquote>
+<p>$ git fetch [remote]</p>
+</blockquote>
+</li>
+<li><p>显示所有远程仓库</p>
+<blockquote>
+<p>$ git remote -v</p>
+</blockquote>
+</li>
+<li><p>显示某个远程仓库的信息</p>
+<blockquote>
+<p>$ git remote show [remote]</p>
+</blockquote>
+</li>
+<li><p>增加一个新的远程仓库，并命名</p>
+<blockquote>
+<p>$ git remote add [shortname] [url]</p>
+</blockquote>
+</li>
+<li><p>取回远程仓库的变化，并与本地分支合并</p>
+<blockquote>
+<p>$ git pull [remote] [branch]</p>
+</blockquote>
+</li>
+<li><p>上传本地指定分支到远程仓库</p>
+<blockquote>
+<p>$ git push [remote] [branch]</p>
+</blockquote>
+</li>
+<li><p>强行推送当前分支到远程仓库，即使有冲突</p>
+<blockquote>
+<p>$ git push [remote] –force</p>
+</blockquote>
+</li>
+<li><p>推送所有分支到远程仓库</p>
+<blockquote>
+<p>$ git push [remote] –all</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="撤销"><a href="#撤销" class="headerlink" title="撤销"></a>撤销</h2><ul>
+<li><p>恢复暂存区的指定文件到工作区</p>
+<blockquote>
+<p>$ git checkout [file]</p>
+</blockquote>
+</li>
+<li><p>恢复某个 commit 的指定文件到暂存区和工作区</p>
+<blockquote>
+<p>$ git checkout [commit] [file]</p>
+</blockquote>
+</li>
+<li><p>恢复暂存区的所有文件到工作区</p>
+<blockquote>
+<p>$ git checkout .</p>
+</blockquote>
+</li>
+<li><p>重置暂存区的指定文件，与上一次 commit 保持一致，但工作区不变</p>
+<blockquote>
+<p>$ git reset [file]</p>
+</blockquote>
+</li>
+<li><p>重置暂存区与工作区，与上一次 commit 保持一致</p>
+<blockquote>
+<p>$ git reset –hard</p>
+</blockquote>
+</li>
+<li><p>重置当前分支的指针为指定 commit，同时重置暂存区，但工作区不变</p>
+<blockquote>
+<p>$ git reset [commit]</p>
+</blockquote>
+</li>
+<li><p>重置当前分支的 HEAD 为指定 commit，同时重置暂存区和工作区，与指定 commit 一致</p>
+<blockquote>
+<p>$ git reset –hard [commit]</p>
+</blockquote>
+</li>
+<li><p>重置当前 HEAD 为指定 commit，但保持暂存区和工作区不变</p>
+<blockquote>
+<p>$ git reset –keep [commit]</p>
+</blockquote>
+</li>
+<li><p>新建一个 commit，用来撤销指定 commit</p>
+</li>
+<li>后者的所有变化都将被前者抵消，并且应用到当前分支<blockquote>
+<p>$ git revert [commit]</p>
+</blockquote>
+</li>
+</ul>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Git介绍"><span class="toc-number">1.</span> <span class="toc-text">Git介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#初始化配置"><span class="toc-number">2.</span> <span class="toc-text">初始化配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#克隆代码库"><span class="toc-number">3.</span> <span class="toc-text">克隆代码库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#查看代码库信息"><span class="toc-number">4.</span> <span class="toc-text">查看代码库信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#拉取，提交与推送操作"><span class="toc-number">5.</span> <span class="toc-text">拉取，提交与推送操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分支操作"><span class="toc-number">6.</span> <span class="toc-text">分支操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工作区操作"><span class="toc-number">7.</span> <span class="toc-text">工作区操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#标签操作"><span class="toc-number">8.</span> <span class="toc-text">标签操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#恢复操作"><span class="toc-number">9.</span> <span class="toc-text">恢复操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其他操作"><span class="toc-number">10.</span> <span class="toc-text">其他操作</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Git-常用命令"><span class="toc-number"></span> <span class="toc-text">Git 常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#新建代码库"><span class="toc-number">1.</span> <span class="toc-text">新建代码库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#增加-删除文件"><span class="toc-number">2.</span> <span class="toc-text">增加/删除文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码提交"><span class="toc-number">3.</span> <span class="toc-text">代码提交</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工作区"><span class="toc-number">4.</span> <span class="toc-text">工作区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分支"><span class="toc-number">5.</span> <span class="toc-text">分支</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#标签"><span class="toc-number">6.</span> <span class="toc-text">标签</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#查看信息"><span class="toc-number">7.</span> <span class="toc-text">查看信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#远程同步"><span class="toc-number">8.</span> <span class="toc-text">远程同步</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#撤销"><span class="toc-number">9.</span> <span class="toc-text">撤销</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
