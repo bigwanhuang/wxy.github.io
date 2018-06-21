@@ -117,6 +117,21 @@
 <p>坚持计时器的截止期设置为重传时间的值，但若没有收到从接收端来的响应，则发送另一个探测报文段，并将坚持计时器的值加倍和并复位，发送端继续发送探测报文段，将坚持计时器的值加倍和复位，知道这个值增大到阈值为止（通常为60秒）。之后，发送端每隔60s就发送一个报文段，直到窗口重新打开为止；</p>
 <h2 id="保活计时器：keeplive-timer"><a href="#保活计时器：keeplive-timer" class="headerlink" title="保活计时器：keeplive timer"></a>保活计时器：keeplive timer</h2><p>每当服务器收到客户的信息，就将keeplive timer复位，超时通常设置2小时，若服务器超过2小时还没有收到来自客户的信息，就发送探测报文段，若发送了10个探测报文段（没75秒发送一个）还没收到响应，则终止连接。</p>
 <h2 id="时间等待计时器：Time-Wait-Timer"><a href="#时间等待计时器：Time-Wait-Timer" class="headerlink" title="时间等待计时器：Time_Wait Timer"></a>时间等待计时器：Time_Wait Timer</h2><p>在连接终止期使用，当TCP关闭连接时，并不认为这个连接就真正关闭了，在时间等待期间，连接还处于一种中间过度状态。这样就可以时重复的fin报文段在到达终点后被丢弃，这个计时器的值通常设置为一格报文段寿命期望值的两倍</p>
+<h1 id="time-wait"><a href="#time-wait" class="headerlink" title="time_wait"></a>time_wait</h1><ol>
+<li><p>time_wait状态如何产生？<br>首先调用close()发起主动关闭的一方，在发送最后一个ACK之后会进入time_wait的状态，也就说该发送方会保持2MSL时间之后才会回到初始状态。MSL值得是数据包在网络中的最大生存时间。产生这种结果使得这个TCP连接在2MSL连接等待期间，定义这个连接的四元组（客户端IP地址和端口，服务端IP地址和端口号）不能被使用。</p>
+</li>
+<li><p>time_wait状态产生的原因</p>
+</li>
+</ol>
+<p>1为实现TCP全双工连接的可靠释放</p>
+<p>由TCP状态变迁图可知，假设发起主动关闭的一方（client）最后发送的ACK在网络中丢失，由于TCP协议的重传机制，执行被动关闭的一方（server）将会重发其FIN，在该FIN到达client之前，client必须维护这条连接状态，也就说这条TCP连接所对应的资源（client方的local_ip,local_port）不能被立即释放或重新分配，直到另一方重发的FIN达到之后，client重发ACK后，经过2MSL时间周期没有再收到另一方的FIN之后，该TCP连接才能恢复初始的CLOSED状态。如果主动关闭一方不维护这样一个TIME_WAIT状态，那么当被动关闭一方重发的FIN到达时，主动关闭一方的TCP传输层会用RST包响应对方，这会被对方认为是有错误发生，然而这事实上只是正常的关闭连接过程，并非异常。</p>
+<p>2）为使旧的数据包在网络因过期而消失</p>
+<p>为说明这个问题，我们先假设TCP协议中不存在TIME_WAIT状态的限制，再假设当前有一条TCP连接：(local_ip, local_port, remote_ip,remote_port)，因某些原因，我们先关闭，接着很快以相同的四元组建立一条新连接。本文前面介绍过，TCP连接由四元组唯一标识，因此，在我们假设的情况中，TCP协议栈是无法区分前后两条TCP连接的不同的，在它看来，这根本就是同一条连接，中间先释放再建立的过程对其来说是“感知”不到的。这样就可能发生这样的情况：前一条TCP连接由local peer发送的数据到达remote peer后，会被该remot peer的TCP传输层当做当前TCP连接的正常数据接收并向上传递至应用层（而事实上，在我们假设的场景下，这些旧数据到达remote peer前，旧连接已断开且一条由相同四元组构成的新TCP连接已建立，因此，这些旧数据是不应该被向上传递至应用层的），从而引起数据错乱进而导致各种无法预知的诡异现象。作为一种可靠的传输协议，TCP必须在协议层面考虑并避免这种情况的发生，这正是TIME_WAIT状态存在的第2个原因。</p>
+<p>3）总结<br>具体而言，local peer主动调用close后，此时的TCP连接进入TIME_WAIT状态，处于该状态下的TCP连接不能立即以同样的四元组建立新连接，即发起active close的那方占用的local port在TIME_WAIT期间不能再被重新分配。由于TIME_WAIT状态持续时间为2MSL，这样保证了旧TCP连接双工链路中的旧数据包均因过期（超过MSL）而消失，此后，就可以用相同的四元组建立一条新连接而不会发生前后两次连接数据错乱的情况。</p>
+<ol start="3">
+<li>time_wait状态如何避免</li>
+</ol>
+<p>首先服务器可以设置SO_REUSEADDR套接字选项来通知内核，如果端口忙，但TCP连接位于TIME_WAIT状态时可以重用端口。在一个非常有用的场景就是，如果你的服务器程序停止后想立即重启，而新的套接字依旧希望使用同一端口，此时SO_REUSEADDR选项就可以避免TIME_WAIT状态。</p>
 
         </section>
     </article>
@@ -128,7 +143,7 @@
     <div class="toc-container">
         <h1>目录</h1>
         <div class="content">
-            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#TCP报文段结构"><span class="toc-number">1.</span> <span class="toc-text">TCP报文段结构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#可靠性"><span class="toc-number">2.</span> <span class="toc-text">可靠性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#流量控制"><span class="toc-number">3.</span> <span class="toc-text">流量控制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#原因"><span class="toc-number">3.1.</span> <span class="toc-text">原因</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#计时器"><span class="toc-number">4.</span> <span class="toc-text">计时器</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#重传计时器："><span class="toc-number">4.1.</span> <span class="toc-text">重传计时器：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#坚持计时器：persistent-timer"><span class="toc-number">4.2.</span> <span class="toc-text">坚持计时器：persistent timer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#保活计时器：keeplive-timer"><span class="toc-number">4.3.</span> <span class="toc-text">保活计时器：keeplive timer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#时间等待计时器：Time-Wait-Timer"><span class="toc-number">4.4.</span> <span class="toc-text">时间等待计时器：Time_Wait Timer</span></a></li></ol></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#TCP报文段结构"><span class="toc-number">1.</span> <span class="toc-text">TCP报文段结构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#可靠性"><span class="toc-number">2.</span> <span class="toc-text">可靠性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#流量控制"><span class="toc-number">3.</span> <span class="toc-text">流量控制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#原因"><span class="toc-number">3.1.</span> <span class="toc-text">原因</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#计时器"><span class="toc-number">4.</span> <span class="toc-text">计时器</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#重传计时器："><span class="toc-number">4.1.</span> <span class="toc-text">重传计时器：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#坚持计时器：persistent-timer"><span class="toc-number">4.2.</span> <span class="toc-text">坚持计时器：persistent timer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#保活计时器：keeplive-timer"><span class="toc-number">4.3.</span> <span class="toc-text">保活计时器：keeplive timer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#时间等待计时器：Time-Wait-Timer"><span class="toc-number">4.4.</span> <span class="toc-text">时间等待计时器：Time_Wait Timer</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#time-wait"><span class="toc-number">5.</span> <span class="toc-text">time_wait</span></a></li></ol>
         </div>
     </div>
     
