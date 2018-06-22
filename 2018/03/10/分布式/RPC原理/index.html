@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>RPC原理 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>RPC原理</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年03月10日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/分布式/">分布式</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h1 id="通用原理"><a href="#通用原理" class="headerlink" title="通用原理"></a>通用原理</h1><p><img src="http://i2.bvimg.com/650541/2ae5156f1828f22e.jpg" alt=""></p>
+<ul>
+<li>Client Code: 客户端调用方代码实现， 负责发起RPC 调用， 为调用方用户提供使用API。</li>
+<li>Serialization/Deserialization: 负责对RPC 调用通过网络传输的内容进行序列化与反序列化， 不同的RPC 框架有不同的实现机制。主要分为文本与二进制两大类。文本类别的序列化机制主要有XML 与JSON 两种格式， 二进制类别的序列化机<br>制常见的有Java 原生的序列化机制，以及Hessian 、protobuf、Thrift 、Avro 、Kryo、<br>MessagePack 等， 不同的序列化方式在可读性、码流大小、支持的数据类型及性能等方面都存在较大差异， 需要用户根据自己的实际情况进行甄别与筛选。</li>
+<li>Stub Proxy: 可以看作是一种代理对象， 屏蔽RPC 调用过程中复杂的网络处理逻辑， 使得PRC 调用透明化， 能够保持与本地调用一样的代码风格。</li>
+<li>Transport: 作为RPC 框架底层的通信传输模块， 一般通过Socket 在客户端与服务端之间传递诮求与应答消息。</li>
+<li>Server Code: 服务端服务业务逻辑具体的实现。</li>
+</ul>
+<h1 id="RMI"><a href="#RMI" class="headerlink" title="RMI"></a>RMI</h1><p>Java RMI 是一种基千Java 的远程方法调用技术， 是Java<br>特有的一种RPC 实现。它能够使部署在不同主机上的Java 对象之间进行透明的通信与方法调用</p>
+<h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><ul>
+<li>支待真正的面向对象的多态性。而完全支持面向对象也是RMI 相对千其他RPC框架的优势之一。</li>
+<li>Java语言独有， 不支待其他语言， 能够完美地支持Java语言所独有的特性。</li>
+<li>使用了Java原生的序列化机制，所有序列化对象必须实现java.io.Serializable接口。</li>
+<li>底层通信基千BIO(同步阻塞I/0) 实现的Socket完成。</li>
+</ul>
+<p>因Java原生序列化机制与BIO 通信机制本身存在性能问题， 导致RMI的性能较差，对性能要求高的使用场景不推荐该方案</p>
+<p>定义RMI 对外服务接口HelloService</p>
+<p>import java.rmi.Remote;<br>import java.rmi.RemoteException;<br>public interface HelloService extends Remote {<br>String sayHello(String someOne)throws RemoteException;}</p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#通用原理"><span class="toc-number">1.</span> <span class="toc-text">通用原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#RMI"><span class="toc-number">2.</span> <span class="toc-text">RMI</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#特性"><span class="toc-number">2.1.</span> <span class="toc-text">特性</span></a></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 |  站长 WXY</a>&nbsp
+    </div>
+  
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
