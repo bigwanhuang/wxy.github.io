@@ -10,7 +10,7 @@
     <link rel="icon" href="/favicon.ico">
   
     
-  <title>gc算法 | 万某</title>
+  <title>垃圾收集器 | 万某</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -50,7 +50,7 @@
   <div class="content">
     <article>
         <section class="content markdown-body">
-          <h1>gc算法</h1>
+          <h1>垃圾收集器</h1>
           <div class='post-meta'>
             <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年08月16日</time>
             
@@ -64,8 +64,8 @@
             
             
           </div>
-          <h2 id="Serial收集器"><a href="#Serial收集器" class="headerlink" title="Serial收集器"></a>Serial收集器</h2><p>这个收集器是一个单线程的收集器，但它<br>的“单线程”的意义并不仅仅说明它只会使用一个CPU或一条收集线程去完成垃圾收集工作，<br>更重要的是在它进行垃圾收集时，必须暂停其他所有的工作线程，直到它收集结束<br><img src="https://i.imgur.com/SI3TkFB.jpg" alt=""></p>
-<h2 id="ParNew收集器"><a href="#ParNew收集器" class="headerlink" title="ParNew收集器"></a>ParNew收集器</h2><p>Serial收集器的多线程版本，除了使用多条线程进行垃圾收集之<br>外，其余行为包括Serial收集器可用的所有控制参数（例如：-XX：SurvivorRatio、-XX：<br>PretenureSizeThreshold、-XX：HandlePromotionFailure等）、收集算法、Stop The World、对<br>象分配规则、回收策略等都与Serial收集器完全一样<br><img src="https://i.imgur.com/DS6lQFt.jpg" alt=""></p>
+          <h2 id="Serial收集器"><a href="#Serial收集器" class="headerlink" title="Serial收集器"></a>Serial收集器</h2><p>这个收集器是一个单线程的收集器，但它<br>的“单线程”的意义并不仅仅说明它只会使用一个CPU或一条收集线程去完成垃圾收集工作，<br>更重要的是在它进行垃圾收集时，必须暂停其他所有的工作线程，直到它收集结束<br>新生代采用复制算法，在老年代采用标记-压缩算法<br><img src="https://i.imgur.com/SI3TkFB.jpg" alt=""></p>
+<h2 id="ParNew收集器"><a href="#ParNew收集器" class="headerlink" title="ParNew收集器"></a>ParNew收集器</h2><p>Serial收集器的多线程版本，除了使用多条线程进行垃圾收集之<br>外，其余行为包括Serial收集器可用的所有控制参数（例如：-XX：SurvivorRatio、-XX：<br>PretenureSizeThreshold、-XX：HandlePromotionFailure等）、收集算法、Stop The World、对<br>象分配规则、回收策略等都与Serial收集器完全一样<br>新生代采用复制算法，在老年代采用标记-压缩算法<br><img src="https://i.imgur.com/DS6lQFt.jpg" alt=""></p>
 <blockquote>
 <p>它是许多运行在Server模式下的虚拟机中首选的新生代收集器，其中有一个与性能无关但<br>很重要的原因是，除了Serial收集器外，目前只有它能与CMS收集器配合工作</p>
 </blockquote>
@@ -80,9 +80,7 @@
 <li>初始标记</li>
 <li>并发标记</li>
 <li>重新标记</li>
-<li>并发清除</li>
-</ul>
-<h2 id="G1收集器"><a href="#G1收集器" class="headerlink" title="G1收集器"></a>G1收集器</h2><ul>
+<li>并发清除<br>新生代中采用复制算法，在老年代采用标记-清除算法<h2 id="G1收集器"><a href="#G1收集器" class="headerlink" title="G1收集器"></a>G1收集器</h2></li>
 <li>并行与并发：G1能充分利用多CPU、多核环境下的硬件优势，使用多个CPU（CPU或者<br>CPU核心）来缩短Stop-The-World停顿的时间，部分其他收集器原本需要停顿Java线程执行的<br>GC动作，G1收集器仍然可以通过并发的方式让Java程序继续执行。</li>
 <li>分代收集：与其他收集器一样，分代概念在G1中依然得以保留。虽然G1可以不需要其<br>他收集器配合就能独立管理整个GC堆，但它能够采用不同的方式去处理新创建的对象和已<br>经存活了一段时间、熬过多次GC的旧对象以获取更好的收集效果。</li>
 <li>空间整合：与CMS的“标记—清理”算法不同，G1从整体来看是基于“标记—整理”算法实<br>现的收集器，从局部（两个Region之间）上来看是基于“复制”算法实现的，但无论如何，这<br>两种算法都意味着G1运作期间不会产生内存空间碎片，收集后能提供规整的可用内存。这种<br>特性有利于程序长时间运行，分配大对象时不会因为无法找到连续内存空间而提前触发下一<br>次GC。</li>

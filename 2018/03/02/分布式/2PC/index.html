@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>2PC | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>2PC</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年03月02日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/分布式/">分布式</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>是一种由协调器来处理分布式原子参与者是提交或者回滚事务的分布式算法。</p>
+<h3 id="2个阶段："><a href="#2个阶段：" class="headerlink" title="2个阶段："></a>2个阶段：</h3><ul>
+<li>提交请求阶段或者叫投票阶段<br>该阶段的任务是确定相关参与者对于事务处理是否准备就绪， YES 代表可以commit,<br>NO 则反之。</li>
+<li>提交阶段<br>基于投票结果， 由协调器决定提交事务抑或是退出事务处理；各事务参与者遵循指示，对本地事务资源做需要的动作。<br><img src="https://i.imgur.com/zYOWElU.png" alt=""><h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3>最大的不足是提交协议是阻塞型协议， 如果事务协调器宥机， 某些参与者将无法<br>解决他们的事务： 一个参与者发送确认消息给协调器， 因协调器无法工作而导致事务未处<br>理完而处于悬挂状态。</li>
+</ul>
+<h2 id="3PC"><a href="#3PC" class="headerlink" title="3PC"></a>3PC</h2><p>3PC分为3次交互。第一阶段， 投票， 事务协调器询问参与者是否能<br>提交( canCommit), 都得到肯定回答后， 继续第二阶段。第二阶段是预提交， 都确认预提<br>交成功后， 进行第三阶段。第三阶段就是真实的提交， 成功则完成事务；失败则继续重试。<br>3PC是在2PC的基础上增加了一次交互， 也就是preCommit(又称预提交）。只要预提交都<br>成功， 则一定要保证doCommit提交成功， 即使协调器在下一阶段不可用， 或者调用超时。<br>这是协议的基本思想， 在工业环境中， 一般是通过重试补偿的策略来保证doCommit提交<br>成功的。</p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2个阶段："><span class="toc-number">1.1.</span> <span class="toc-text">2个阶段：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#缺点"><span class="toc-number">1.2.</span> <span class="toc-text">缺点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3PC"><span class="toc-number">2.</span> <span class="toc-text">3PC</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
