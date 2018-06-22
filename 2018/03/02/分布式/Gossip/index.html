@@ -64,13 +64,27 @@
             
             
           </div>
-          
+          <h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><h1 id="集群问题"><a href="#集群问题" class="headerlink" title="集群问题"></a>集群问题</h1><ol>
+<li>其中的每一个节点如何较快的得知集群状态全集的某些特征？</li>
+<li>如何避免多个节点就某个状态发生分歧，使得集群的状态实时或最终一致？</li>
+</ol>
+<h1 id="Gossip"><a href="#Gossip" class="headerlink" title="Gossip"></a>Gossip</h1><p>Gossip就是一种去中心化思路的分布式协议， 解决状态在集群中的传播和状态一致性的保证两个问题。其实现简单， 具备较高的容错性和性能</p>
+<p><img src="https://i.imgur.com/vapgGYC.jpg" alt=""> </p>
+<h2 id="特性总结"><a href="#特性总结" class="headerlink" title="特性总结"></a>特性总结</h2><p>Gossip 的核心是在去中心化结构下， 通过信息的部分传递， 达到全集群的状态信息传播， 传播的时间收敛在O(Log(N)) 以内， 其中N 是节点的数量。同时基于Gossip 协议， 可以构建出状态一致的各种解决方案。</p>
+
         </section>
     </article>
     
         
   </div>
   <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#问题"><span class="toc-number">1.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#集群问题"><span class="toc-number">2.</span> <span class="toc-text">集群问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Gossip"><span class="toc-number">3.</span> <span class="toc-text">Gossip</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#特性总结"><span class="toc-number">3.1.</span> <span class="toc-text">特性总结</span></a></li></ol></li></ol>
+        </div>
+    </div>
     
   </aside>
 </main>
