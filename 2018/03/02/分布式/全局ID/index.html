@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>全局ID | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>全局ID</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年03月02日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/分布式/">分布式</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h1 id="为什么"><a href="#为什么" class="headerlink" title="为什么"></a>为什么</h1><p>在分布式环境下， 数据库是可以拆分(sharding) 的， 一张表的自增机制（比如MySQL) 只能保证该表唯一， 在数据合并到历史库，迁移或者查询，如果出现id 冲突无异于噩梦。</p>
+<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><h3 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h3><h4 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h4><ol>
+<li>当前日期和时间，UUID的第一个部分与时间有关，如果你在生成一个UUID 之后，过几秒又生成一个UUID, 则第一个部分不同， 其余相同。</li>
+<li>时钟序列。</li>
+<li>全局唯一的IEEE机器识别号， 如果有网卡， 从网卡MAC地址获得， 没有网卡以<br>其他方式获得。</li>
+</ol>
+<p><strong>优势：</strong> API简单、易用。<br><strong>不足：</strong>占用空间大、字符串本身无法加工， 可读性不强。</p>
+<h3 id="ID生成表模式"><a href="#ID生成表模式" class="headerlink" title="ID生成表模式"></a>ID生成表模式</h3><p>在一个事务会话里提交：<br>REPLACE INTO Tickets64(stub)VALUES(‘a’);<br>SELECT LAST_INSERT_ID();<br>这样我们就能拿到不断增长且不重复的ID了<br><strong>优点：</strong>简单易用， 也有一定的高可用方案，<br><strong>缺点：</strong>使用了mysq数l 据库的独特<br>语法REPLACEINTO。</p>
+<h3 id="Snowflake"><a href="#Snowflake" class="headerlink" title="Snowflake"></a>Snowflake</h3><p><strong>优点：</strong>高性能， 低延迟；独立的应用；按时间有序。<br><strong>缺点：</strong> 需要独立的开发和部署。</p>
+<h3 id="结合缓存"><a href="#结合缓存" class="headerlink" title="结合缓存"></a>结合缓存</h3><p>采取ID生成表模式成批获取id比如1000放到本地缓存(Local<br>cache) , 这样在client使用的时候可进一步提升性能。</p>
+<p><strong>优点：</strong>高性能， 低延迟。<br><strong>缺点：</strong> ID不连贯。</p>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#为什么"><span class="toc-number">1.</span> <span class="toc-text">为什么</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#方案"><span class="toc-number">1.1.</span> <span class="toc-text">方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#UUID"><span class="toc-number">1.1.1.</span> <span class="toc-text">UUID</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#组成"><span class="toc-number">1.1.1.1.</span> <span class="toc-text">组成</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ID生成表模式"><span class="toc-number">1.1.2.</span> <span class="toc-text">ID生成表模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Snowflake"><span class="toc-number">1.1.3.</span> <span class="toc-text">Snowflake</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#结合缓存"><span class="toc-number">1.1.4.</span> <span class="toc-text">结合缓存</span></a></li></ol></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 |  站长 WXY</a>&nbsp
+    </div>
+  
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
