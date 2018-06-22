@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>NWR | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>NWR</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018年03月02日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/分布式/">分布式</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>MVCC, 全称Multiversion eoneurrency eontrol, 翻译为基于多版本并发控制。人们一<br>般把基千锁（比如行级锁）的并发控制机制称成为悲观机制， 而把MVCC机制称为乐观机<br>制。由于MVCC是一种宽松的设计， 读写相互不阻塞， 可以获得较好的并发性能。</p>
+<h2 id="MySQL的InnoDB"><a href="#MySQL的InnoDB" class="headerlink" title="MySQL的InnoDB"></a>MySQL的InnoDB</h2><ul>
+<li>引擎给每张表都增加2个字段， 分别叫作create version和delete version。</li>
+<li>插入操作时：记录的创建版本号就是事务版本号。</li>
+<li>更新操作时：采用的是先标记旧的那行记录为己删除， 并且删除版本号是事务版本号， 然后插入一行新记录的方式。</li>
+<li>删除操作时：就把事务版本号作为删除版本号。</li>
+</ul>
+<p>当我们做查询操作的时候， 要符合以下两个条件的记录才能被事务查询出来：1.delete version&gt;当前版本号， 就是说删除操作是在当前事务启动之后做的。2.create version&lt;=当前事务版本号。</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+<th>create version</th>
+<th>delete versi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>明</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>小明</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>小明</td>
+<td>2</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL的InnoDB"><span class="toc-number">1.1.</span> <span class="toc-text">MySQL的InnoDB</span></a></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 |  站长 WXY</a>&nbsp
+    </div>
+  
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
