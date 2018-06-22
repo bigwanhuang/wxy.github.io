@@ -64,13 +64,66 @@
             
             
           </div>
-          
+          <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>NWR是一种在分布式存储系统中用千控制一致性级别的一种策略。在Amazon的<br>Dynamo云存储系统中，就应用NWR来控制一致性。</p>
+<ul>
+<li>N: 同一份数据的拷贝份数。拷贝份数.</li>
+<li>W: 是更新一个数据对象的时候需要确保成功更新的份数.</li>
+<li>R: 读取一个数据需要读取的拷贝的份数.</li>
+</ul>
+<blockquote>
+<p>W&gt;N/2 ;W+R&gt;N</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>N</th>
+<th>W</th>
+<th>R</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td></td>
+<td></td>
+<td>单点问题，无法满足高可用</td>
+</tr>
+<tr>
+<td>2</td>
+<td></td>
+<td></td>
+<td>挂一个节点仍是单点</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2，3</td>
+<td>1，2，3</td>
+<td>读越大， 读性能越差；写越大， 写性能越差</td>
+</tr>
+<tr>
+<td>4 or more</td>
+<td></td>
+<td></td>
+<td>服务器节点成本高</td>
+</tr>
+</tbody>
+</table>
+<p>一般采取N=3、R=2、W=2的配置，W=2,可以保障大多数写成功，而R=2,则能保障读到大多数一致的最新版本,。关于由于不同节点都在提供W和R,而W未必等于N,则一定存在数据不一致的情况。冲突解决策略一般有Cassandra使用的client timestamps 和Riak的Vector clock等</p>
+
         </section>
     </article>
     
         
   </div>
   <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#介绍"><span class="toc-number">1.</span> <span class="toc-text">介绍</span></a></li></ol>
+        </div>
+    </div>
     
   </aside>
 </main>
