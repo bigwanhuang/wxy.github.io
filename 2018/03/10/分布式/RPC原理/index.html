@@ -81,7 +81,7 @@
 </ul>
 <p>因Java原生序列化机制与BIO 通信机制本身存在性能问题， 导致RMI的性能较差，对性能要求高的使用场景不推荐该方案</p>
 <p>定义RMI 对外服务接口HelloService</p>
-<p>import java.rmi.Remote;<br>import java.rmi.RemoteException;<br>public interface HelloService extends Remote {<br>String sayHello(String someOne)throws RemoteException;}</p>
+<p><code>import java.rmi.Remote;</code><br><code>import java.rmi.RemoteException;</code><br><code>public interface HelloService extends Remote {</code><br><code>String sayHello(String someOne)throws RemoteException;}</code></p>
 
         </section>
     </article>
