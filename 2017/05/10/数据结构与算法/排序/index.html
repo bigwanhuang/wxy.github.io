@@ -108,20 +108,46 @@ exch(a, j, j-h);
 h = h/3;
 }}}
 </code></pre><h2 id="快速排序"><a href="#快速排序" class="headerlink" title="快速排序"></a>快速排序</h2><p>思想：先从数列中取出一个数作为基准数，记为x。分区过程，将不小于x的数全放到它的右边，不大于x的数全放到它的左边。（这样key的位置左边的没有大于key的，右边的没有小于key的，只需对左右区间排序即可）再对左右区间重复第二步，直到各区间只有一个数</p>
-<pre><code>public void quickSort(int[] arr) {
-    if (arr == null || arr.length &lt; 2) {
-        return;
-    }
-    quickSort(arr, 0, arr.length - 1);
-}
+<pre><code>public class QuickSort {
 
-public void quickSort(int[] arr, int l, int r) {
-    if (l &lt; r) {
-        swap(arr, l + (int) (Math.random() * (r - l + 1)), r);
-        int[] p = partition(arr, l, r);
-        quickSort(arr, l, p[0] - 1);
-        quickSort(arr, p[1] + 1, r);
+        public static void quickSort(int[] arr) {
+        if (arr == null || arr.length &lt; 2) {
+            return;
+        }
+        quickSort(arr, 0, arr.length - 1);
     }
+
+    public static void quickSort(int[] arr, int l, int r) {
+        if (l &lt; r) {
+            swap(arr, l + (int) (Math.random() * (r - l + 1)), r);
+            int[] p = partition(arr, l, r);
+            quickSort(arr, l, p[0] - 1);
+            quickSort(arr, p[1] + 1, r);
+        }
+    }
+
+    public static int[] partition(int[] arr, int l, int r) {
+        int less = l - 1;
+        int more = r;
+        while (l &lt; more) {
+            if (arr[l] &lt; arr[r]) {
+                swap(arr, ++less, l++);
+            } else if (arr[l] &gt; arr[r]) {
+                swap(arr, --more, l);
+            } else {
+                l++;
+            }
+        }
+        swap(arr, more, r);
+        return new int[] { less + 1, more };
+    }
+
+    public static void swap(int[] arr, int i, int j) {
+        int tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+
 }
 </code></pre><h2 id="插入排序"><a href="#插入排序" class="headerlink" title="插入排序"></a>插入排序</h2><p>思想：先给定一个排好序的序列（通常设定为给定要排序序列的第一个值），然后陆续将后面的值与前面排好序的比较，如果是小于前面的值，就插到前面去。就这样一直比较，然后最后总会插入到合适的位置，如果是插入到第一位了，就算完成了插入。</p>
 <pre><code>public static void insertionSort(int[] arr) {
