@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>Nginx+Keepalved高可用方案 | 万某</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>万某</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>Nginx+Keepalved高可用方案</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2017年04月29日</time>
+            
+              | <i class="fa fa-folder-open-o" aria-hidden="true"></i> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Nginx/">Nginx</a>
+  </div>
+
+
+
+            
+            
+          </div>
+          <h2 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h2><p>高可用（ High Availability ）是指通过专门的架构设计，减少整个系统的故障时间，保持<br>其提供服务的高度可用性。在将Nginx 作为负载均衡服务器使用时， upstream 机制能够检<br>测出后端服务器是否可用，如果其中一台服务器右机， Nginx 能够自动转移到后端正常的服<br>务器中，以保持系统持续可用。</p>
+<h3 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h3><p>衡量一个集群的高可用性在于没有单点故障，即其中任何一台服务器若机都不会造成<br>整个服务中断。若一个集群在前端只有一台Nginx 反向代理负载均衡服务器， 一旦该服务<br>器发生故障，就会造成整个集群的服务中断。为了解决这个问题，可以利用Keepalived 部<br>署备用服务器，实现故障转移。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>Keepalived 内置了VRRP (，虚拟路由冗余协议）<br>功能， VRRP 用于解决静态路由出现的单点故障问题，它通过IP 多播的方式通信，当发现主<br>路由故障时，通过选举策略将备用路由更换为主路由，从而继续提供服务。<br>Keepalived 利用VRRP 实现了将提供对外访问的IP 地址（ Virtual IP ）自动在主服务器<br>( M as ter ）和备用服务器(Backup ）之间m 换，正常情况下Master 使用Virtual IP 提供对外访<br>问，当Master 故障时，其他正在监控Master 的Backup 会通过优先级（ priority ）机制竞争接<br>管Virtual IP 继续对外提供服务，其他落选的Backup 会继续监控当前使用的Virtual IP 服<br>务器。</p>
+<h2 id="安装和配置"><a href="#安装和配置" class="headerlink" title="安装和配置"></a>安装和配置</h2><h3 id="Keepalived安装"><a href="#Keepalived安装" class="headerlink" title="Keepalived安装"></a>Keepalived安装</h3><pre><code>#解压
+tar -zxvf keepalived.tar.gz
+cd keepalived
+#安装
+./configure
+make &amp;&amp; make install &amp;&amp; cd ..
+#添加到系统服务，配置开机启动
+cd /usr/local/etc/rc.d/init.d
+cp keepalived/etc/init.d/keepalived
+chmod+x/etc/init.d/keepalived
+chkconfig keepalived on
+#链接配置文件
+cd /usr/local/etc/sysconfig
+ln -s &apos;pwd&apos;/keepalived/etc/sysconfig/keeoalived
+#链接程序文件
+cd /usr/local/sbin
+ln -s &apos;pwd&apos;/keepalived/usr/sbin/keepalived
+</code></pre><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>启动Keepalived 前需要创建一个配置文件， Keepalived 将会根据配置文件中的配置进<br>行工作</p>
+<pre><code>mkdir /etc/keepalived
+vi /etc/keepalived/keepalived.conf
+</code></pre><p>编写配置文件，为主服务器（ Master ）配置keepalived 服务</p>
+<p>vrrp_instance VI_1{<br>    state MASTER<br>    interface eth0;<br>    virtual_router_id 21<br>    mcast_src_ip 192.168.78.21 #默认使用网卡主IP<br>    priority 100 #优先级、权重（0~254<br>    advert_int 1 #主备之间同步检查间隔<br>    authentication{<br>        auth_tyoe PASS #密码验证<br>    }<br>    virtual_ipaddress{<br>        192.168.78.20<br>    }<br>    }</p>
+<h3 id="启动Keepalived服务"><a href="#启动Keepalived服务" class="headerlink" title="启动Keepalived服务"></a>启动Keepalived服务</h3><pre><code>service keepalived start
+ps aux|grep keepalived#查看进程
+ip a|grep 192.168.28.1# 查看virtual ip
+</code></pre><h3 id="配置备用服务器的Keepalived"><a href="#配置备用服务器的Keepalived" class="headerlink" title="配置备用服务器的Keepalived"></a>配置备用服务器的Keepalived</h3><pre><code>vrrp_instance VI_1{
+state BACKUP
+priority 90#优先级低于master
+}
+</code></pre><p>Master 和Backup 服务器中的K eepa liv ed 通过VRRP 的112 端口通信，若端口无法访<br>问则会同时抢占Virtual IP 地址。开放112 端口</p>
+<pre><code>iptables -I INPUT -s192.168.78.1 -p112 -jACCEPT
+service iptables save
+iptables -I INPUT -s192.168.78.2 -p112 -jACCEPT
+service iptables save
+</code></pre><p><code>启动</code></p>
+<pre><code>service keepalived start
+</code></pre><h2 id="使用keepalived监控Nginx服务"><a href="#使用keepalived监控Nginx服务" class="headerlink" title="使用keepalived监控Nginx服务"></a>使用keepalived监控Nginx服务</h2><p>修改Keepalived配置文件</p>
+<pre><code>vrrp_scr1pt chk_nginx {#配置用于检测Nginx 运行状态的脚本
+script &quot;/ chk_nginx.sh&quot;#脚本路径
+interval 2#脚本执行频率
+weight -20#权重变化
+vrrp_instance VI_1{#为VI_1
+
+track_script (
+chk_ng1nx
+}}
+</code></pre><p>执行<code>vi /chk_ nginx. sh</code> 命令创建监控脚本</p>
+<pre><code>#! /bin/bash
+if[`ps-C nginx--no-header|wc-l`-eq 0];then
+service nginx start
+sleep 2
+if[`ps-C nginx --no-header|wc-1`-eq 0];then
+    service keepalived stop
+fi
+fi
+</code></pre>
+        </section>
+    </article>
+    
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#高可用"><span class="toc-number">1.</span> <span class="toc-text">高可用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#原因"><span class="toc-number">1.1.</span> <span class="toc-text">原因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原理"><span class="toc-number">1.2.</span> <span class="toc-text">原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装和配置"><span class="toc-number">2.</span> <span class="toc-text">安装和配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Keepalived安装"><span class="toc-number">2.1.</span> <span class="toc-text">Keepalived安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置"><span class="toc-number">2.2.</span> <span class="toc-text">配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动Keepalived服务"><span class="toc-number">2.3.</span> <span class="toc-text">启动Keepalived服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置备用服务器的Keepalived"><span class="toc-number">2.4.</span> <span class="toc-text">配置备用服务器的Keepalived</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用keepalived监控Nginx服务"><span class="toc-number">3.</span> <span class="toc-text">使用keepalived监控Nginx服务</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2018 |  站长 WXY</a>&nbsp
+    </div>
+  
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
