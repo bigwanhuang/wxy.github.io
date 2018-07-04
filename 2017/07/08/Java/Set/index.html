@@ -71,10 +71,8 @@
 <li><strong>无序性</strong>：集合中的元素没有固定的顺序.</li>
 </ol>
 <p>##Java 集合框架中的集合 Set</p>
-<p><img src="http://img.blog.csdn.net/20161023145804436" alt="这里写图片描述"></p>
 <p>Java 集合中的 Set 表示一个元素不能重复的集合。<br>更准确的说，一个 set 中不存在两个元素 e1,e2, 使得 e1.equals(e2) 成立，<strong>最多只能有一个 null</strong>　元素。</p>
 <p>它和数学中的 <strong>集合</strong> 概念一致。</p>
-<p><img src="http://img.blog.csdn.net/20161023150846831" alt="这里写图片描述"></p>
 <p>Set 直接继承自 Collection 接口 ，和 List, Queue 在同一级别。</p>
 <p>Set 接口 在 Collection 接口的基础上添加了一些额外的规定，比如对 add, equals, hashCode 方法的规定。</p>
 <p><strong>注意</strong>：</p>
@@ -83,8 +81,6 @@
 <li>如果集合中的元素是<strong>可变的</strong>，在元素修改时也需要确保不重复</li>
 <li>不是所有实现类都允许元素为 null</li>
 </ul>
-<p>##Set 接口定义的方法</p>
-<p><img src="http://img.blog.csdn.net/20161023152412617" alt="这里写图片描述"></p>
 <p>大多数都是 Collection 中已经定义的。</p>
 <p>###1.添加</p>
 <p>添加指定元素 e 到 set 中：</p>
